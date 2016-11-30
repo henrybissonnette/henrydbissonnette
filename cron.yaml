@@ -1,0 +1,5 @@
+cron:
+- description: remove old tic-tac-toe games
+  url: /tasks/tictac/
+  schedule: every 24 hours
+  

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}
+: Tic Tac Toe
+{% endblock %}
+
+{% block linkbar %}
+<li><a href="/">home</a></li>
+<li><a href="/programming/">programming</a></li>
+{% endblock %}
+
+{% block content %}
+<div id="tictac">
+<h1>Tic-Tac-Toe</h1>
+<h2>
+	You are 
+	{% if game_model.ai == 'x' %}
+	O
+	{% else %}
+	X
+	{% endif %}
+</h2>
+<table {% if game.is_game_over %}id="over"{% endif %}>
+	{% for row in game.board %}
+		<tr>
+		{% for cell in row %}		
+			{% if cell or game.is_game_over%}
+				<td class="occupied">{{cell|capfirst}}</td>
+			{% else %}
+				<td class="unoccupied">
+					<form action="/programming/tic-tac-toe/" method="post">
+						<input type="hidden" name="move" value="{{forloop.parentloop.counter0}}{{forloop.counter0}}" />
+						<input type="hidden" name='game_key' value="{{game_model.key}}" />
+						<input type="submit" value="{{game.turn|capfirst}}"/>						
+					</form>
+				</td>
+			{% endif %}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+{% if game.is_game_over %}
+	<div id="outcome">
+	{% if game.get_winner %}
+		{{game.get_winner|capfirst}} Wins!
+	{% else %}
+		Draw...
+	{% endif %}
+	</div>
+	<a id="play_again" href=''>Play Again?</a>
+	
+{% endif %}
+</div>
+{% endblock %}

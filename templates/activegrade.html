@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}
+: ActiveGrade
+{% endblock %}
+
+{% block linkbar %}
+<a href="/">home</a>
+<a href="/programming/">programming</a>
+{% endblock %}
+
+{% block content %}
+<div id="activegrade">
+<h1>ActiveGrade Interview Challenge</h1>
+
+<p>
+	This is a solution for a quick problem proposed in a solicitation for applications from 
+	<a href="http://activegrade.com/" target="_blank">ActiveGrade</a>. 
+	ActiveGrade is a web-based gradebook application that helps teachers assess and communicate with students 
+	while helping students evaluate their own learning.
+</p>
+
+<p>The following form takes a numeric input n and will display all integers from 1 to n.</p>
+
+<form method="post" action="/activegrade/">
+	Enter an integer: <input type="text" name="number" size="3"/>
+	<input type="submit" />
+	{% if error %}
+		<span class="error">{{error}}</span>
+	{% endif %}
+</form>
+{% if numbers %}
+	<div id="enumerate">
+	{% for i in numbers %}
+	{{i}}
+	{% endfor %}
+	</div>
+{% endif %}
+</div>
+{% endblock %}

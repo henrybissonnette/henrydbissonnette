@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}
+: Programming
+{% endblock %}
+
+{% block linkbar %}
+<a href="/">home</a>
+<a href="tic-tac-toe/">Tic-Tac-Toe</a>
+{% endblock %}
+
+{% block content %}
+<div id="programming">
+<h1>Programming</h1>
+
+<h2>bliterati (<a href="//www.bliterati.com" target="_blank">www.bliterati.com</a>)</h2>
+<p>
+	My primary coding example is <a href="//www.bliterati.com" target="_blank">bliterati</a>. It's a publishing app hosted on Google App Engine.
+	App Engine is Google's cloud platform and allows Python and Java based backends (well I guess there's also a Go backend).
+	I use python and the webapp framework as well as many <a href="https://www.djangoproject.com/" target="_blank">django</a> libraries and 
+	the django template system. I've of course also written a lot of HTML, CSS, and Javascript for bliterati. All told the site
+	uses several thousand lines of code.
+</p>
+<p>
+	It maintains a lot of user information. All pages are dynamically generated. It has a fairly sophisticatd 
+	<a href="http://slashdot.org/" target="_blank">
+	Slashdot-like</a> comment system. Users can share their drafts of documents with a self-selected group of users and those users
+	can create revisions in which they've highlighted and otherwise marked up the original. Documents can be tagged, and can be replies
+	to one another. It dynamically generates user specific HTML email updates. Pretty much all of these features are coded at a fairly 
+	low level. While I appreciate the advantages of using libraries and frameworks to accelerate the development process, I've felt
+	that, at least during this learning phase, creating my own code for these things gives some valuable experience. 
+</p>
+<p>
+	All the code is hosted in a <a href="https://github.com/henrybissonnette/hanksandbox" target="_blank">public repository on GitHub</a>. 
+	Virtually all of the interesting python code is in either 
+	<a href="https://github.com/henrybissonnette/hanksandbox/blob/master/main.py" target="_blank">main.py</a> or 
+	<a href="https://github.com/henrybissonnette/hanksandbox/blob/master/messages.py" target="_blank">messages.py</a>. Main.py contains
+	all of the request handlers for the site and messages.py contains the subroutines that generate email messages. I would say
+	that messages.py is an example of reasonably good Python code. 
+</p>
+<p>
+	Most of the javascript code can be found in the 
+	<a href="https://github.com/henrybissonnette/hanksandbox/tree/master/static/js" target="_blank">static/js</a> folder. One of the cleaner pieces 
+	of javascript code would be <a href="https://github.com/henrybissonnette/hanksandbox/blob/master/static/js/tag_browser.js" target="_blank">
+	tag_browser.js</a>. It uses JSON and AJAX to power the tag browser that you see on the home page of bliterati. 
+</p>
+<p>
+	If you do peruse the code some, you'll almost certainly find a lot that is less than ideal. I'd ask that you keep in mind that
+	over the course of the year that I've been working on bliterati I've gone from being an absolute novice in web programming (though
+	a somewhat skilled programmer) to demonstrating a moderate level of expertise. I've cobbled together the knowledge I need to make 
+	bliterati's bits and pieces work from books and the web. While I've rewritten many things in the code, it is still a patchwork that 
+	was written at various points along my learning curve. If you probe deeply enough you're likely to find: 
+</p>
+<ul>
+	<li>Invalid HTML.</li>
+	<li>Javascipt that would give JSLint seizures.</li>
+	<li>Javascript that does not fail gracefully.</li>
+	<li>A lack of testing.</li>
+	<li>Design that is not compatible across all browsers (particularly legacy IEs).</li>
+	<li>Less than stellar software design.</li>
+	<li>Incomplete documentation.</li>
+</ul>
+<p>
+	Some of this is the product of my initial inexperience. A big part is that bliterati is an exercise in learning by doing, and I've 
+	deliberately prioritized maintaining momentum over
+	worrying about writing perfect code. Bliterati is a pretty ambitious project for a solo, inexperienced, web programmer. So another 
+	source of these problems is a tendency to shirk tasks that would be more essential (or possible) when coding with others. My long-standing
+	objective has been to get a prototype up and working and then to go back and refine and polish.
+</p>
+<p>
+	Anyhow, my point in going into all of that is to say that I hope you judge my code as just a step on the road to programming maturity. 
+	Hopefully it's a testament to my capacity to write serious code that works. I also hope that it demonstrates my capacity to make great 
+	strides working and learning independently. I would love to take my skills to the next level. I think that will happen more quickly 
+	if I get the chance to work closely with experienced professional programmers.
+</p>
+</div>
+
+<h2>Formal Courses</h2>
+<p>
+	As an undergrad I elected to take a few courses that were programming oriented. I took <b>computer organization</b> and <b>microprocessor
+	electronics</b>. In both courses I built computational circuits and programmed low level systems using hex code and assembly
+	languages. I also took <b>algorithms and problem solving</b>, an object oriented Java-based CS course. Algorithms and problem solving
+	had a reputation as one of the most difficult courses in the CS department (it had the highest fail rate among courses in the CS core). I 
+	elected to take it for fun as a Gen Ed and recieved an A. 
+</p>
+<p>
+	Beyond those directly CS-based courses I made extensive use of programming concepts in many of my other courses. Physics and economics 
+	are both highly technical subjects in which I was required to use mathematical programming languages (Mathematica, Matlab, R, etc.)
+	to solve problems.
+</p>
+
+<h2>Udacity</h2>
+<p>
+	I recently discovered <a href="http://www.udacity.com/" target="_blank">Udacity</a>, a source of free university level 
+	programming courses. I worked through their CS101 course pretty quickly in my free time. I would have started with something more advanced, but the 
+	course project&#8212;build a search engine&#8212;sounded too interesting to pass up. I did feel like writing lots of little code snippets 
+	for the course quizzes increased my Python fluency. For instance, just a couple days ago (for their 
+	<a href="http://www.google.com/url?sa=t&rct=j&q=%20site%3Audacity.com%20udacity&source=web&cd=8&ved=0CGAQFjAH&url=http%3A%2F%2Fwww.udacity.com%2Fcourse%2Fcs262&ei=WoK-T9uUO5LEsQKDibQ3&usg=AFQjCNFqXXDveASa9cxKH1pRQbQc4GvIEA&cad=rja" target="_blank">programming languages</a> 
+	course) I wrote, in a single go, an eight line recursive function that
+	takes the definition of any non-deterministic finite state machine and outputs a string that that NDFSM will accept. That is, my code was bug free and 
+	syntactically correct on the first write (which is what I mean by fluency&#8212;writing code that "just works"). I also found that I really enjoyed answering questions on the forums. 
+	I think a lot of my personality and thought process comes across in some of my responses. You can browse my posts 
+	<a href="http://forums.udacity.com/cs101-april2012/users/14259/henry-bissonnette" target="_blank">here</a>. 
+</p>
+<p>
+As in other things I find that teaching other people programming concepts does a lot to increase my own mastery. I'll definitely be 
+continuing to take these courses in my spare time to expand my programming expertise.
+</p>
+{% endblock %}

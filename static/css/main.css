@@ -1,0 +1,233 @@
+
+
+html{
+	height:100%;
+}
+
+body{
+	margin: 0px;
+	padding: 0px;
+	font-family: "pragmatica-web-1", "pragmatica-web-2", "Helvetica Neue", Arial, Helvetica, sans-serif;
+	color: #4b535a;
+	height:100%;
+	bottom:0px;
+}
+
+#main{
+	width: 900px;
+	text-align: left;
+	margin:auto;	
+}
+.center{
+	width: 700px;
+	text-align: left;
+	margin:auto;
+	margin-bottom: 50px;
+	
+}
+
+#henry{
+	font-size:20px;
+}
+
+#main{
+	
+}
+
+#head a{
+	text-decoration: none;
+	color:white;
+}
+
+#head{
+	text-align:center;
+	color: white;
+	margin-bottom: 50px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+    background-image: url('/static/images/header_gradient.png');
+    background-repeat: repeat-x;
+}
+
+#notfooter{
+	min-height:100%;
+	height:100%;
+	height: auto !important;
+}
+
+#linkbar{
+	float:left;
+	width: 100px;
+	margin-top:0px;
+	margin-left:-70px;
+}
+
+#linkbar ul{
+	list-style: none;
+}
+
+#foot{
+	margin-top:-100px;
+	background-color: #111;
+	color: white;
+	height: 100px;
+	bottom:0px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  color: #111; }
+
+.error{
+	color:red;
+}
+
+#push{
+	height:100px;
+}
+
+a{
+	text-decoration: none;
+}
+
+a:hover{
+	text-decoration: underline;
+}
+
+/**************************
+ACTIVEGRADE
+***************************/
+#activegrade{
+	text-align:center;	
+}
+
+#activegrade #enumerate{
+	margin:20px;
+	padding:10px;
+	background-color: #eee
+}
+
+/**************************
+TIC TAC TOE
+***************************/
+#tictac{
+	text-align:center;
+	padding-top:100px;
+}
+
+
+#tictac #outcome{
+	font-size: 50px;
+}
+
+#tictac #play_again{
+	text-decoration:none;
+	font-size: 50px;
+}
+
+#tictac table{
+	margin:auto;
+}
+
+#tictac table#over{
+	background-color: #4b535a;
+}
+
+#tictac td{
+	border:solid;
+}
+
+#tictac td input,#tictac td{
+	width:110px;
+	height:110px;
+	font-size:90px;
+}
+
+#tictac td.occupied{
+	background-color: white;
+}
+
+#tictac td.unoccupied{
+	background-color: #eee;
+}
+
+#tictac td.unoccupied input{
+	color: #eee;
+	background-color: #eee;
+	border: none;
+}
+
+#tictac td.unoccupied input:hover,#tictac td.unoccupied:hover{
+	cursor:pointer;
+	background-color: #bbb;
+}
+
+/**************************
+DESIGN
+***************************/
+#design{
+	text-align: center;
+}
+
+.caption{
+	margin: auto;
+	max-width:600px;
+	text-align: left;
+	margin-bottom: 20px;
+}
+
+/**************************
+RESUME
+***************************/
+
+#resume{
+	font-family: ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
+	margin: 30px;
+	margin-bottom: 50px;
+}
+
+#resume #email{
+	background-image: url('/static/images/email_text.png');
+	background-repeat: no-repeat;
+	background-size:350px;
+	background-position:center;
+	margin-top:-20px; 
+	height:30px;
+}
+
+#resume .note{
+	margin-left: 20px;
+	color:#bbb;
+}
+
+#resume a{
+	color: black;
+	text-decoration: none;
+}
+
+#resume a:hover{
+	text-decoration: underline;
+}
+
+#resume h1{
+	font-weight:bold;
+	text-align: center;
+	border-bottom: solid;
+}
+
+#resume h2{
+	border-bottom: solid 1px;
+}
+#resume .groups{
+	
+}
+
+#resume .groups li{
+	margin-left: -30px;
+	list-style: none;
+}
+
+#resume .groups span{
+	font-weight:bold;
+	color: black;
+}

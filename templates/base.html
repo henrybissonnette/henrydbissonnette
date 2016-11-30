@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<meta charset="UTF-8">
+<html>
+<head>
+	<title>Henry Bissonnette{% block title %}{% endblock %}</title>	
+	<link rel="icon" type="image/png" href="/static/images/favicon.ico"> 
+	<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+	{% block scripts %}
+	{% endblock %}
+</head>
+
+<body>
+	
+<div id="notfooter">
+
+<div id="head">
+	<div class="center">
+		<img src="/static/images/FancyGears_white_128.gif" style="float:left;margin-top:-15px;" width="50" height="50" alt="Moving Gears" /> 
+		<a href="/" id="henry">Henry Bissonnette</a>
+		<a href="mailto:henrydbissonnette@gmail.com">
+			<img src="/static/images/email_white_on_black.png" title="Email Me"
+			style="margin-right:420px;float:right;margin-top:-10px;" width="50" height="50" alt="Email Me" />
+		</a>
+	</div>
+</div>
+
+
+<div id="main">
+	<div id="linkbar">
+		<ul>
+		{% block linkbar %}
+		{% endblock %}
+		</ul>
+	</div>	
+	
+	<div class="center">
+		{% block content %}
+		{% endblock %}
+	</div>		
+</div>
+
+<div id="push"></div>
+</div>
+
+<div id="foot"></div>
+
+</body>	
+
+</html>
