@@ -14,16 +14,21 @@ body{
 }
 
 #main{
-	width: 900px;
+	width: 1000px;
 	text-align: left;
-	margin:auto;	
+	margin:auto;
 }
 .center{
-	width: 700px;
+	width: 800px;
 	text-align: left;
 	margin:auto;
 	margin-bottom: 50px;
-	
+
+}
+
+.note{
+	margin-left: 20px;
+	color:#bbb;
 }
 
 #henry{
@@ -31,7 +36,7 @@ body{
 }
 
 #main{
-	
+
 }
 
 #head a{
@@ -98,7 +103,7 @@ a:hover{
 ACTIVEGRADE
 ***************************/
 #activegrade{
-	text-align:center;	
+	text-align:center;
 }
 
 #activegrade #enumerate{
@@ -191,13 +196,8 @@ RESUME
 	background-repeat: no-repeat;
 	background-size:350px;
 	background-position:center;
-	margin-top:-20px; 
+	margin-top:-20px;
 	height:30px;
-}
-
-#resume .note{
-	margin-left: 20px;
-	color:#bbb;
 }
 
 #resume a{
@@ -219,11 +219,12 @@ RESUME
 	border-bottom: solid 1px;
 }
 #resume .groups{
-	
+
 }
 
 #resume .groups li{
 	margin-left: -30px;
+	margin-bottom: 6px;
 	list-style: none;
 }
 
