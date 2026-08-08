@@ -129,8 +129,12 @@ From the Organizations management account:
 3. In the hierarchy or account details, note its parent. With a small
    Organization this will probably be **Root**, which is acceptable for now.
    Do not create an OU solely to complete this checklist.
-4. Open the account's **Policies** tab and select **Service control policies**.
-5. If the only attached policy is `FullAWSAccess`, report that and stop. If
+4. If Organizations offers **Enable service control policies**, choose it.
+   Enabling the policy type attaches the default `FullAWSAccess` SCP and does
+   not reduce member-account permissions by itself. Do not create or attach a
+   restrictive SCP yet.
+5. Open the account's **Policies** tab and select **Service control policies**.
+6. If the only attached policy is `FullAWSAccess`, report that and stop. If
    other SCPs are attached, report only their names. Do not detach or edit
    them.
 
