@@ -1,6 +1,7 @@
 # AWS pre-work for henrybissonnette.com
 
-Status: ready for the account owner to follow
+Status: member account created; root centralization, federated access, and
+registrar readiness remain
 
 This runbook contains only the human-owned work needed before the project can
 bootstrap its AWS infrastructure. It intentionally stops before creating any
@@ -12,8 +13,8 @@ manage them through Terraform.
 - Domain: `henrybissonnette.com`
 - Source repository: `henrybissonnette/henrydbissonnette`
 - Registrar: name.com
-- Preferred AWS topology: a dedicated member account in the existing AWS
-  Organization
+- AWS member account: `henrybissonnette_personal` (`241077340022`), created
+  2026-08-08 in the existing AWS Organization
 - Primary deployment region: `us-east-1`
 - Budget notification address: supplied out of band; do not commit it
 
@@ -22,7 +23,7 @@ future project use it. CloudFront certificates must be created in `us-east-1`.
 
 ## Phase 1: create and enter the workload account
 
-### 1. Prepare a unique account email address
+### 1. Prepare a unique account email address — complete
 
 Choose a monitored mailbox or alias that:
 
@@ -33,7 +34,7 @@ Choose a monitored mailbox or alias that:
 Do not put this address, its credentials, or recovery details in the source
 repository.
 
-### 2. Create the member account
+### 2. Create the member account — complete
 
 This must be done from the AWS Organizations **management account** (or by a
 principal to which that operation has been delegated). The existing Womb
@@ -46,7 +47,7 @@ In the AWS console:
 3. Select **AWS accounts**, then **Add an AWS account**.
 4. Select **Create an AWS account**.
 5. Use:
-   - Account name: `henrybissonnette-prod`
+   - Account name: `henrybissonnette_personal`
    - Account email: the unique address prepared above
    - IAM role name: `OrganizationAccountAccessRole`
 6. Add these tags if the organization does not already apply an equivalent
@@ -70,7 +71,7 @@ AWS documents the management-account requirement and account-creation flow in
 Use the organization's existing IAM Identity Center setup:
 
 1. In **IAM Identity Center**, assign Hank's existing user or administrative
-   group to `henrybissonnette-prod`.
+   group to `henrybissonnette_personal`.
 2. Assign the organization's normal administrative permission set for the
    bootstrap period. Scope the assignment to this member account.
 3. Open the account from the AWS access portal.
@@ -80,52 +81,115 @@ Do not create an IAM user, an IAM-user access key, a root access key, or a
 long-lived GitHub secret. AWS documents account assignments in
 [Assign user or group access to AWS accounts](https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-accounts.html).
 
-### 4. Check the organization's root-access posture
+### 4. Enable centralized root access
 
-In the Organizations management account, check whether **IAM > Root access
-management** is enabled.
+The organization currently has centralized root access disabled. Enable it;
+this is the recommended security posture for an Organization and the fact that
+this is only the second account is not a reason to defer it.
 
-- If centralized root access is enabled, leave the new member account without
-  root credentials. Do not recover a password or add root MFA merely for this
-  project.
-- If it is not enabled, report that fact before changing anything. Enabling it
-  is an organization-wide security decision, not website pre-work. If a member
-  root login is later required, protect it with MFA and never create root
-  access keys.
+From the Organizations management account:
+
+1. Open the **IAM** console.
+2. In the left navigation, choose **Root access management**.
+3. Choose **Enable**. If AWS first asks to enable trusted access for IAM in
+   Organizations, accept that prerequisite.
+4. Enable both capabilities:
+   - **Root credentials management**; and
+   - **Privileged root actions in member accounts**.
+5. Leave **Delegated administrator** empty for now. Delegating this authority
+   is optional and deserves an explicit organization-security decision; it is
+   not required to secure the new account.
+6. Choose **Enable** and verify that root access management reports enabled.
+7. In the account list, verify that `henrybissonnette_personal` has no root
+   credentials. Do not recover a root password or add root MFA merely to make
+   a credential exist.
+
+If a future exceptional task truly requires root authority, use a centrally
+authorized, short-lived privileged action or temporarily allow recovery, then
+remove the recovered credentials when the task is complete. Never create root
+access keys.
 
 New Organizations accounts can be created without root credentials, and AWS
 recommends centralized root access for member accounts. See
 [Best practices for member accounts](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_best-practices_member-acct.html)
 and [Centralize root access for member accounts](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html).
 
-### 5. Report policy constraints; do not loosen them
+### 5. Identify the account parent and policy guardrails
 
-Note the OU containing the account and any service control policies that are
-attached to it. If practical, verify that they do not categorically deny the
-services expected for the first deployment:
+The 12-digit value `241077340022` is the **account ID**, not an OU. An
+organizational unit (OU) is a folder-like grouping of accounts under the
+Organization's top-level **Root**. A service control policy (SCP) is an
+organization-level ceiling on what accounts may do; it does not grant access,
+but it can deny services even to an administrator.
+
+From the Organizations management account:
+
+1. Open **AWS Organizations** and choose **AWS accounts**.
+2. Select `henrybissonnette_personal`.
+3. In the hierarchy or account details, note its parent. With a small
+   Organization this will probably be **Root**, which is acceptable for now.
+   Do not create an OU solely to complete this checklist.
+4. Open the account's **Policies** tab and select **Service control policies**.
+5. If the only attached policy is `FullAWSAccess`, report that and stop. If
+   other SCPs are attached, report only their names. Do not detach or edit
+   them.
+
+The project will later verify whether any non-default SCP categorically denies
+the services expected for the first deployment:
 
 - CloudFormation, IAM, STS, and the GitHub OIDC provider;
 - S3, including S3 lockfiles, for Terraform state;
 - Route 53, ACM, CloudFront, and AWS Budgets.
 
-If a policy blocks one of these services, report the policy name or the denied
-operation. Do not detach or weaken an SCP as part of this runbook. We will
-adapt the design or request a narrow organization-level change.
+If a policy blocks one of these services, the project will adapt the design or
+request a narrow organization-level change rather than asking you to loosen it
+speculatively.
 
 ## Phase 2: verify registrar readiness without changing DNS
 
-This is a readiness check, not the DNS cutover.
+This is a readiness check, not the DNS cutover. Public DNS inspection already
+confirmed that the domain uses name.com's four authoritative nameservers,
+publishes no DS record, and currently has no apex A, AAAA, or MX records. There
+is one apex TXT record. The account-side export is still needed because public
+DNS cannot enumerate arbitrary subdomain records.
 
-1. Sign in to name.com and confirm that `henrybissonnette.com` is active.
-2. Confirm that automatic renewal and the payment method are current.
-3. Confirm that two-step verification is enabled and that recovery codes are
-   stored securely. Name.com's current instructions are in
+1. Sign in at name.com.
+2. Secure the registrar account:
+   - choose the user icon in the upper-right, then **Settings**;
+   - choose **Two-Step Verification** under **Security**;
+   - if no authenticator is listed, choose **Setup Authenticator App**, scan
+     the QR code, enter the generated code, and complete verification; and
+   - generate backup codes and store them in a password manager, not in this
+     repository or conversation.
+   Name.com's current instructions are in
    [Setting up Two-Step Verification](https://www.name.com/support/articles/205934297-setting-up-two-step-verification-with-google-authenticator).
-4. Record the current authoritative nameservers.
-5. Export or privately capture all current DNS records, especially MX, TXT,
-   CAA, SRV, and verification records. Do not paste full TXT values into the
-   repository or project conversation.
-6. Record whether DNSSEC is enabled and whether a DS record is present.
+3. Verify domain renewal:
+   - choose **My Domains**, then `henrybissonnette.com`;
+   - confirm that the domain status is active;
+   - under **Quick Actions**, turn **Automatic Renewal** on; and
+   - note the expiration date, but do not send payment information here.
+4. Verify billing readiness:
+   - choose the user icon, then **Billing**;
+   - confirm there is a current default payment profile; and
+   - update it if necessary.
+   Name.com documents the per-domain renewal control in
+   [Enabling or disabling automatic renewal](https://www.name.com/support/articles/205189058-enabling-disabling-automatic-renewal-for-your-domains).
+5. Export the current zone:
+   - return to **My Domains** and select `henrybissonnette.com`;
+   - under **Domain Actions**, choose **Manage DNS Records**;
+   - choose **Export DNS Records (CSV)** above the records; and
+   - save the CSV privately. Do not commit it or paste its TXT values into the
+     conversation. Keep it available for the later Route 53 migration.
+   Name.com documents this control in
+   [Exporting DNS records as a CSV file](https://www.name.com/support/articles/360007694113-exporting-dns-records-as-a-csv-file).
+6. Confirm the current nameservers without changing them:
+   - return to the domain details page;
+   - under **Domain Actions**, choose **Manage Nameservers**; and
+   - verify that four name.com nameservers are present.
+7. No DNSSEC action is needed now. Public DNS shows no DS record, and name.com's
+   own nameservers do not provide DNSSEC. We can enable Route 53 DNSSEC later
+   as a separate automated change plus the unavoidable registrar-side DS
+   update.
 
 Do **not** change the nameservers yet. Terraform must first create the Route 53
 hosted zone and reproduce every record that must survive the cutover. The
