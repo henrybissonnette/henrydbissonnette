@@ -190,3 +190,97 @@ limited to:
 Routine selection, creation, modification, verification, and deployment of
 infrastructure remain agent-owned work. Terraform's use of a resource
 replacement is not, by itself, a reason to involve a human.
+
+## Review feedback
+
+Reviewed by claude/clause, 2026-08-08, against Hank's three objectives:
+(1) minimal human involvement, (2) light and simple with maximum agent
+liberty, (3) extensible without further human effort.
+
+### Overall
+
+This is a strong draft. The core shape is right: a dedicated member account,
+federated human access, no manual resources, no long-lived keys, GitHub OIDC
+for deployment credentials, and everything past the bootstrap owned by
+Terraform. The closing rule — humans step in only for irreversible loss of
+product data or capability, or for account/trust recovery, and a Terraform
+resource replacement is not by itself a human matter — is exactly the right
+place to draw the red-tape line. The notes below are refinements, not
+objections.
+
+### 1. Agent credential path is the biggest open question (objectives 1 and 2)
+
+The draft gives GitHub Actions an OIDC path to AWS, but never says how the
+agents themselves reach AWS for day-to-day work: `terraform plan`, reading
+CloudFront or Route 53 state, debugging a failed deploy. If CI is the only
+credentialed path, every inspection requires a commit and a workflow run —
+that is exactly the procedural drag objective 2 warns against.
+
+Recommendation: the bootstrap stack should establish a credential path the
+agent workbench can use directly, decided explicitly rather than left
+implicit. Reasonable options, simplest first:
+
+- Hank runs `aws sso login` (or equivalent) against the member account when
+  starting a work session and exposes the short-lived credentials to the
+  agent environment; zero new infrastructure, but re-involves the human on a
+  session cadence.
+- The bootstrap stack creates a role the agent environment can assume
+  through some existing trust (only if Womb infrastructure already has AWS
+  identity of its own).
+- Fallback: agents drive everything through CI, but then add a manually
+  triggerable plan/inspect workflow (`workflow_dispatch`) so exploration
+  does not require synthetic commits.
+
+Whichever is chosen, it belongs in the bootstrap stack now, not as a later
+retrofit.
+
+### 2. Make the deployment role broad; let the account be the guardrail (objectives 2 and 3)
+
+The draft does not yet state how the OIDC deployment role is scoped. This is
+the single decision that most determines whether future phases bounce back
+to Hank. If the role is scoped to today's static-site services (S3,
+CloudFront, Route 53, ACM), then the planned "more dynamic" phase — Lambda,
+API Gateway, a database — requires the human to re-run the bootstrap to
+widen it, violating objective 3.
+
+Recommendation: state as a bootstrap design requirement that the deployment
+role is broadly permissioned within the account (administrator- or
+power-user-level plus the IAM permissions Terraform needs), and rely on the
+account boundary, SCPs, and budget alarms as the real blast-radius controls.
+In a dedicated single-purpose account, fine-grained IAM on the deploy role
+is mostly ceremony: it adds recurring human effort and blocks agent work
+while protecting little that the account boundary does not already protect.
+This is also the justification for the member-account step — it is the
+heaviest human task in the runbook, but it is what makes "broad role, light
+procedure" safe. Keep it.
+
+### 3. Minimize the bootstrap launch itself (objective 1)
+
+"Launching the checked-in bootstrap stack once" should be specified as a
+single action: one copy-pasteable CLI command or a CloudFormation
+quick-create link, with the budget notification address as its only
+parameter. If the address is stored at bootstrap time (e.g. as an SSM
+parameter), later stacks can reference it and no future work needs to ask
+Hank for it again — small, but it removes a recurring human touchpoint.
+
+### 4. Smaller notes
+
+- **State locking:** prefer Terraform's native S3 lockfile (`use_lockfile`,
+  Terraform ≥ 1.10) and drop the DynamoDB table entirely. The draft already
+  allows this; make it the default — one less resource, nothing lost.
+- **Repository name:** "Known inputs" lists the source repository as
+  `henrybissonnette/henrydbissonnette` (note the extra `d`). If that is the
+  real legacy repo name, fine; otherwise fix the typo before it propagates
+  into OIDC trust conditions, where an exact-match repo claim would fail.
+- **Correct and worth keeping as-is:** the us-east-1 ACM/CloudFront note;
+  refusing to touch nameservers before Route 53 reproduces existing records
+  (especially mail); the root-access posture handling; the "report, don't
+  loosen" SCP stance; and the non-secret completion report format.
+
+### Verdict
+
+Approve with the additions above. Items 1 and 2 should be resolved in the
+bootstrap stack design before the human runs Phase 1, since both affect what
+the bootstrap creates; item 3 and the smaller notes can be folded in as the
+bootstrap definition is written. Terraform's use of a resource
+replacement is not, by itself, a reason to involve a human.
