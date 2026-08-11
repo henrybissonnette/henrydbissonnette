@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 820" role="img" aria-labelledby="title description">
+  <title id="title">Abstract engineering workbench</title>
+  <desc id="description">Geometric tools, pathways, and a small red sun arranged on a deep green field.</desc>
+  <rect width="720" height="820" rx="8" fill="#164d3b"/>
+  <circle cx="560" cy="154" r="76" fill="#d5522f"/>
+  <path d="M0 615 178 489l130 91 169-216 243 188v268H0Z" fill="#eae1d2"/>
+  <path d="m67 661 118-83 122 85 181-231 165 128" fill="none" stroke="#1d2924" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M112 168h236v180H112z" fill="#f5f0e6" stroke="#1d2924" stroke-width="12"/>
+  <path d="M163 224h134M163 271h88" stroke="#d5522f" stroke-width="14" stroke-linecap="round"/>
+  <path d="M407 214h160M487 134v160" stroke="#f5f0e6" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="488" cy="214" r="105" fill="none" stroke="#f5f0e6" stroke-width="12" stroke-dasharray="16 18"/>
+  <path d="M88 730h544" stroke="#1d2924" stroke-width="14" stroke-linecap="round"/>
+</svg>
