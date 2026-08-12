@@ -19,6 +19,8 @@ resource "aws_route53_record" "retained_apex_verification" {
 }
 
 resource "aws_route53_record" "retained_www_cname" {
+  count = var.custom_domain_enabled ? 0 : 1
+
   zone_id = aws_route53_zone.site.zone_id
   name    = "www.henrybissonnette.com"
   type    = "CNAME"
@@ -72,6 +74,11 @@ resource "aws_route53_record" "site_alias_ipv4" {
   name    = each.value
   type    = "A"
 
+  # The staging www CNAME must be gone before Route 53 can accept any alias at
+  # the same owner. Keeping the dependency explicit makes the phase transition
+  # a Terraform-owned replacement rather than a conflicting parallel change.
+  depends_on = [aws_route53_record.retained_www_cname]
+
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name
     zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
@@ -85,6 +92,8 @@ resource "aws_route53_record" "site_alias_ipv6" {
   zone_id = aws_route53_zone.site.zone_id
   name    = each.value
   type    = "AAAA"
+
+  depends_on = [aws_route53_record.retained_www_cname]
 
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name

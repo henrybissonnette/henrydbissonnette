@@ -37,8 +37,9 @@ run "staging_increment" {
     condition = (
       aws_route53_record.retained_apex_verification.type == "TXT" &&
       length(aws_route53_record.retained_apex_verification.records) == 1 &&
-      aws_route53_record.retained_www_cname.type == "CNAME" &&
-      length(aws_route53_record.retained_www_cname.records) == 1
+      length(aws_route53_record.retained_www_cname) == 1 &&
+      aws_route53_record.retained_www_cname[0].type == "CNAME" &&
+      length(aws_route53_record.retained_www_cname[0].records) == 1
     )
     error_message = "staging must retain the two explicitly reviewed public DNS records"
   }
@@ -85,10 +86,9 @@ run "custom_domain_increment" {
     condition = (
       aws_route53_record.retained_apex_verification.type == "TXT" &&
       length(aws_route53_record.retained_apex_verification.records) == 1 &&
-      aws_route53_record.retained_www_cname.type == "CNAME" &&
-      length(aws_route53_record.retained_www_cname.records) == 1
+      length(aws_route53_record.retained_www_cname) == 0
     )
-    error_message = "custom-domain increment must preserve the retained public DNS records"
+    error_message = "custom-domain increment must preserve the apex record and retire the transitional www CNAME"
   }
 
   assert {
