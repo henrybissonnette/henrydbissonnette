@@ -25,6 +25,11 @@ TERRAFORM_ROOT = ROOT / "infra/aws/terraform/main"
 SITE_ROOT = ROOT / "site"
 EXPECTED_BACKEND_BUCKET = "henrybissonnette-terraform-state-241077340022"
 EXPECTED_BACKEND_KEY = "main/terraform.tfstate"
+EXPECTED_BOOTSTRAP_STACK = "henrybissonnette-bootstrap"
+EXPECTED_APPLY_ROLE = "henrybissonnette-github-apply"
+EXPECTED_BUDGET_TOPIC = "henrybissonnette-budget-notifications"
+EXPECTED_OIDC_SUBJECT = "repo:henrybissonnette/henrydbissonnette:ref:refs/heads/main"
+BOOTSTRAP_TEMPLATE = ROOT / "infra/aws/bootstrap/template.json"
 EXPECTED_TERRAFORM_VERSION = (ROOT / ".terraform-version").read_text(encoding="utf-8").strip()
 EXPECTED_AWS_CLI_VERSION = (ROOT / ".aws-cli-version").read_text(encoding="utf-8").strip()
 OPERATIONS = ("deploy", "plan", "refresh-plan", "site-status")
@@ -186,7 +191,160 @@ class OperationExecutor:
         except CommandFailure as exc:
             raise OperationFailure(category, status) from exc
 
-    def preflight(self, runner: CommandRunner, terraform: str, aws: str, sha: str) -> None:
+    def foundation(self, runner: CommandRunner, aws: str) -> bool:
+        try:
+            stack = private_json(
+                self.checked(
+                    runner,
+                    "foundation-stack",
+                    [aws, "cloudformation", "describe-stacks", "--stack-name", EXPECTED_BOOTSTRAP_STACK, "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            )
+            stacks = stack.get("Stacks")
+            if not isinstance(stacks, list) or len(stacks) != 1:
+                raise ValueError("unexpected stack count")
+            live_stack = stacks[0]
+            if live_stack.get("StackStatus") not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}:
+                raise ValueError("bootstrap stack is not complete")
+            outputs = {item.get("OutputKey"): item.get("OutputValue") for item in live_stack.get("Outputs", [])}
+            expected_outputs = {"AccountId", "ApplyRoleArn", "StateBucketName", "BudgetTopicArn"}
+            if set(outputs) != expected_outputs:
+                raise ValueError("bootstrap output interface changed")
+            if outputs["AccountId"] != EXPECTED_ACCOUNT or outputs["StateBucketName"] != EXPECTED_BACKEND_BUCKET:
+                raise ValueError("bootstrap output identity changed")
+            if outputs["ApplyRoleArn"] != f"arn:aws:iam::{EXPECTED_ACCOUNT}:role/{EXPECTED_APPLY_ROLE}":
+                raise ValueError("bootstrap apply role changed")
+            if outputs["BudgetTopicArn"] != f"arn:aws:sns:{EXPECTED_REGION}:{EXPECTED_ACCOUNT}:{EXPECTED_BUDGET_TOPIC}":
+                raise ValueError("bootstrap topic changed")
+
+            template = private_json(
+                self.checked(
+                    runner,
+                    "foundation-template",
+                    [aws, "cloudformation", "get-template", "--stack-name", EXPECTED_BOOTSTRAP_STACK, "--template-stage", "Original", "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            ).get("TemplateBody")
+            if isinstance(template, str):
+                template = json.loads(template)
+            committed_template = json.loads(BOOTSTRAP_TEMPLATE.read_text(encoding="utf-8"))
+            if template != committed_template:
+                raise ValueError("deployed bootstrap template differs from checkout")
+
+            resources = private_json(
+                self.checked(
+                    runner,
+                    "foundation-resources",
+                    [aws, "cloudformation", "describe-stack-resources", "--stack-name", EXPECTED_BOOTSTRAP_STACK, "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            ).get("StackResources")
+            if not isinstance(resources, list) or len(resources) != 7:
+                raise ValueError("bootstrap ownership set changed")
+            if any(not str(item.get("ResourceStatus", "")).endswith("_COMPLETE") for item in resources):
+                raise ValueError("bootstrap resource is not complete")
+
+            role = private_json(
+                self.checked(
+                    runner,
+                    "foundation-role",
+                    [aws, "iam", "get-role", "--role-name", EXPECTED_APPLY_ROLE, "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            ).get("Role", {})
+            trust = role.get("AssumeRolePolicyDocument", {}).get("Statement", [])
+            expected_condition = {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": EXPECTED_OIDC_SUBJECT,
+            }
+            if role.get("MaxSessionDuration") != 7200 or len(trust) != 1:
+                raise ValueError("apply role boundary changed")
+            if trust[0].get("Action") != "sts:AssumeRoleWithWebIdentity":
+                raise ValueError("apply role action changed")
+            if trust[0].get("Condition", {}).get("StringEquals") != expected_condition:
+                raise ValueError("apply role trust changed")
+            policies = private_json(
+                self.checked(
+                    runner,
+                    "foundation-role-policies",
+                    [aws, "iam", "list-attached-role-policies", "--role-name", EXPECTED_APPLY_ROLE, "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            ).get("AttachedPolicies")
+            if policies != [{"PolicyName": "AdministratorAccess", "PolicyArn": "arn:aws:iam::aws:policy/AdministratorAccess"}]:
+                raise ValueError("apply role policy changed")
+            provider = private_json(
+                self.checked(
+                    runner,
+                    "foundation-oidc-provider",
+                    [aws, "iam", "get-open-id-connect-provider", "--open-id-connect-provider-arn", f"arn:aws:iam::{EXPECTED_ACCOUNT}:oidc-provider/token.actions.githubusercontent.com", "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            )
+            if provider.get("Url") != "token.actions.githubusercontent.com" or provider.get("ClientIDList") != ["sts.amazonaws.com"]:
+                raise ValueError("OIDC provider boundary changed")
+
+            versioning = private_json(
+                self.checked(runner, "foundation-versioning", [aws, "s3api", "get-bucket-versioning", "--bucket", EXPECTED_BACKEND_BUCKET, "--output", "json", "--no-cli-pager"], "foundation-failed")
+            )
+            encryption = private_json(
+                self.checked(runner, "foundation-encryption", [aws, "s3api", "get-bucket-encryption", "--bucket", EXPECTED_BACKEND_BUCKET, "--output", "json", "--no-cli-pager"], "foundation-failed")
+            )
+            ownership = private_json(
+                self.checked(runner, "foundation-ownership", [aws, "s3api", "get-bucket-ownership-controls", "--bucket", EXPECTED_BACKEND_BUCKET, "--output", "json", "--no-cli-pager"], "foundation-failed")
+            )
+            public = private_json(
+                self.checked(runner, "foundation-public-block", [aws, "s3api", "get-public-access-block", "--bucket", EXPECTED_BACKEND_BUCKET, "--output", "json", "--no-cli-pager"], "foundation-failed")
+            )
+            if versioning.get("Status") != "Enabled":
+                raise ValueError("state bucket versioning changed")
+            rules = encryption.get("ServerSideEncryptionConfiguration", {}).get("Rules", [])
+            if len(rules) != 1 or rules[0].get("ApplyServerSideEncryptionByDefault") != {"SSEAlgorithm": "AES256"}:
+                raise ValueError("state bucket encryption changed")
+            if rules[0].get("BucketKeyEnabled", False) is not False:
+                raise ValueError("state bucket key setting changed")
+            if ownership.get("OwnershipControls", {}).get("Rules") != [{"ObjectOwnership": "BucketOwnerEnforced"}]:
+                raise ValueError("state bucket ownership changed")
+            if public.get("PublicAccessBlockConfiguration") != {
+                "BlockPublicAcls": True,
+                "IgnorePublicAcls": True,
+                "BlockPublicPolicy": True,
+                "RestrictPublicBuckets": True,
+            }:
+                raise ValueError("state bucket public block changed")
+
+            subscriptions = private_json(
+                self.checked(
+                    runner,
+                    "foundation-subscription",
+                    [aws, "sns", "list-subscriptions-by-topic", "--topic-arn", outputs["BudgetTopicArn"], "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            ).get("Subscriptions")
+            if not isinstance(subscriptions, list) or len(subscriptions) != 1:
+                raise ValueError("budget subscription count changed")
+            subscription = subscriptions[0]
+            if subscription.get("Protocol") != "email" or subscription.get("SubscriptionArn") in {None, "PendingConfirmation"}:
+                raise ValueError("budget subscription is not confirmed")
+
+            namespace = private_json(
+                self.checked(
+                    runner,
+                    "foundation-state-namespace",
+                    [aws, "s3api", "list-objects-v2", "--bucket", EXPECTED_BACKEND_BUCKET, "--prefix", "main/", "--max-keys", "3", "--output", "json", "--no-cli-pager"],
+                    "foundation-failed",
+                )
+            )
+            keys = [item.get("Key") for item in namespace.get("Contents", [])]
+            if any(key not in {EXPECTED_BACKEND_KEY, f"{EXPECTED_BACKEND_KEY}.tflock"} for key in keys):
+                raise ValueError("state namespace contains an unexpected key")
+            runner.trace.append("foundation-verified")
+            return EXPECTED_BACKEND_KEY in keys
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise OperationFailure("foundation-failed", "safe-failure") from exc
+
+    def preflight(self, runner: CommandRunner, terraform: str, aws: str, sha: str) -> bool:
         if os.environ.get("GITHUB_REF") != MAIN_REF or resolve_head(ROOT) != sha:
             raise OperationFailure("validation-failed", "safe-failure")
         if os.environ.get("AWS_REGION") != EXPECTED_REGION or os.environ.get("AWS_DEFAULT_REGION") != EXPECTED_REGION:
@@ -218,12 +376,17 @@ class OperationExecutor:
         )
         if identity.get("Account") != EXPECTED_ACCOUNT:
             raise OperationFailure("identity-failed", "safe-failure")
+        workload_exists = self.foundation(runner, aws)
+        if self.operation == "site-status" and not workload_exists:
+            runner.trace.append("foundation-ready-workload-absent")
+            return False
         self.checked(
             runner,
             "terraform-init",
             [terraform, f"-chdir={TERRAFORM_ROOT}", "init", "-input=false", "-lockfile=readonly"],
             "initialization-failed",
         )
+        return True
 
     def create_plan(self, runner: CommandRunner, terraform: str, workspace: Path) -> Path:
         plan_file = workspace / "terraform.tfplan"
@@ -397,8 +560,8 @@ class OperationExecutor:
                 runner = self.runner_factory(workspace)
                 if not terraform or not aws:
                     raise OperationFailure("validation-failed", "safe-failure")
-                self.preflight(runner, terraform, aws, source_sha)
-                if self.operation == "site-status":
+                workload_exists = self.preflight(runner, terraform, aws, source_sha)
+                if self.operation == "site-status" and workload_exists:
                     self.site_status(runner, terraform, aws)
                 else:
                     plan_file = self.create_plan(runner, terraform, workspace)

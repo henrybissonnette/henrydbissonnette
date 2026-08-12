@@ -164,20 +164,46 @@ class SafeSummaryTests(unittest.TestCase):
 
 
 class FakeRunner(CommandRunner):
-    def __init__(self, workspace: Path, fail_at: str | None = None, unexpected_at: str | None = None):
+    def __init__(self, workspace: Path, fail_at: str | None = None, unexpected_at: str | None = None, workload_exists: bool = True):
         super().__init__(workspace)
         self.fail_at = fail_at
         self.unexpected_at = unexpected_at
+        self.workload_exists = workload_exists
         self.commands: list[list[str]] = []
+        self.commands_by_label: dict[str, list[str]] = {}
 
     def run(self, label: str, command: list[str], allowed=(0,)) -> Path:
         self.trace.append(label)
         self.commands.append(command)
+        self.commands_by_label[label] = command
         capture = self.workspace / f"{len(self.trace):02d}-{label}.private"
         values = {
             "terraform-version": "Terraform v1.15.8\n",
             "aws-version": "aws-cli/2.36.21 Python/3.13 Linux/x86_64\n",
             "sts-identity": json.dumps({"Account": "241077340022", "Arn": "SENTINEL_PRIVATE_ARN"}),
+            "foundation-stack": json.dumps({"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": [
+                {"OutputKey": "AccountId", "OutputValue": "241077340022"},
+                {"OutputKey": "ApplyRoleArn", "OutputValue": "arn:aws:iam::241077340022:role/henrybissonnette-github-apply"},
+                {"OutputKey": "StateBucketName", "OutputValue": "henrybissonnette-terraform-state-241077340022"},
+                {"OutputKey": "BudgetTopicArn", "OutputValue": "arn:aws:sns:us-east-1:241077340022:henrybissonnette-budget-notifications"},
+            ]}]}),
+            "foundation-template": json.dumps({"TemplateBody": json.loads((ROOT / "infra/aws/bootstrap/template.json").read_text(encoding="utf-8"))}),
+            "foundation-resources": json.dumps({"StackResources": [{"ResourceStatus": "CREATE_COMPLETE"}] * 7}),
+            "foundation-role": json.dumps({"Role": {"MaxSessionDuration": 7200, "AssumeRolePolicyDocument": {"Statement": [{
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {"StringEquals": {
+                    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                    "token.actions.githubusercontent.com:sub": "repo:henrybissonnette/henrydbissonnette:ref:refs/heads/main",
+                }},
+            }]}}}),
+            "foundation-role-policies": json.dumps({"AttachedPolicies": [{"PolicyName": "AdministratorAccess", "PolicyArn": "arn:aws:iam::aws:policy/AdministratorAccess"}]}),
+            "foundation-oidc-provider": json.dumps({"Url": "token.actions.githubusercontent.com", "ClientIDList": ["sts.amazonaws.com"]}),
+            "foundation-versioning": json.dumps({"Status": "Enabled"}),
+            "foundation-encryption": json.dumps({"ServerSideEncryptionConfiguration": {"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}, "BucketKeyEnabled": False}]}}),
+            "foundation-ownership": json.dumps({"OwnershipControls": {"Rules": [{"ObjectOwnership": "BucketOwnerEnforced"}]}}),
+            "foundation-public-block": json.dumps({"PublicAccessBlockConfiguration": {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True}}),
+            "foundation-subscription": json.dumps({"Subscriptions": [{"Protocol": "email", "SubscriptionArn": "SENTINEL_PRIVATE_SUBSCRIPTION_ARN"}]}),
+            "foundation-state-namespace": json.dumps({"Contents": [{"Key": "main/terraform.tfstate"}]} if self.workload_exists else {"KeyCount": 0}),
             "terraform-show-plan": json.dumps(
                 {
                     "resource_changes": [
@@ -215,6 +241,7 @@ class OperationTraceTests(unittest.TestCase):
         fail_at: str | None = None,
         fail_verification: bool = False,
         unexpected_at: str | None = None,
+        workload_exists: bool = True,
     ) -> tuple[OperationExecutor, int, dict, FakeRunner]:
         outer = tempfile.TemporaryDirectory()
         self.addCleanup(outer.cleanup)
@@ -223,7 +250,7 @@ class OperationTraceTests(unittest.TestCase):
         created: list[FakeRunner] = []
 
         def factory(workspace: Path) -> FakeRunner:
-            runner = FakeRunner(workspace, fail_at, unexpected_at)
+            runner = FakeRunner(workspace, fail_at, unexpected_at, workload_exists)
             created.append(runner)
             return runner
 
@@ -267,17 +294,18 @@ class OperationTraceTests(unittest.TestCase):
         self.assertEqual(deploy.trace.count("terraform-plan"), 1)
         self.assertEqual(deploy.trace.count("terraform-apply"), 1)
         self.assertEqual(deploy.trace.count("cloudfront-invalidate"), 1)
-        plan_command = runner.commands[runner.trace.index("terraform-plan")]
-        apply_command = runner.commands[runner.trace.index("terraform-apply")]
+        self.assertLess(deploy.trace.index("foundation-verified"), deploy.trace.index("terraform-init"))
+        plan_command = runner.commands_by_label["terraform-plan"]
+        apply_command = runner.commands_by_label["terraform-apply"]
         plan_path = next(argument.removeprefix("-out=") for argument in plan_command if argument.startswith("-out="))
         self.assertEqual(apply_command[-1], plan_path)
-        upload_command = runner.commands[runner.trace.index("site-upload")]
-        reconcile_command = runner.commands[runner.trace.index("site-reconcile")]
+        upload_command = runner.commands_by_label["site-upload"]
+        reconcile_command = runner.commands_by_label["site-reconcile"]
         # aws s3 sync deletes only when asked; the CLI has no --no-delete option.
         self.assertNotIn("--delete", upload_command)
         self.assertNotIn("--no-delete", upload_command)
         self.assertIn("--delete", reconcile_command)
-        invalidation_command = runner.commands[runner.trace.index("cloudfront-invalidate")]
+        invalidation_command = runner.commands_by_label["cloudfront-invalidate"]
         self.assertEqual(invalidation_command[invalidation_command.index("--paths") + 1], "/*")
         self.assertTrue(all(mode == 0o600 for mode in deploy.capture_modes))
         self.assertFalse(deploy.last_workspace.exists())
@@ -290,7 +318,7 @@ class OperationTraceTests(unittest.TestCase):
 
         refresh, result, _, refresh_runner = self.run_operation("refresh-plan")
         self.assertEqual(result, 0)
-        plan_command = refresh_runner.commands[refresh_runner.trace.index("terraform-plan")]
+        plan_command = refresh_runner.commands_by_label["terraform-plan"]
         self.assertIn("-refresh-only", plan_command)
         self.assertFalse(any("apply" in command for command in refresh_runner.commands))
 
@@ -301,9 +329,17 @@ class OperationTraceTests(unittest.TestCase):
         self.assertIn("status-cloudfront", status.trace)
         self.assertIn("status-origin-access", status.trace)
 
+        prework, result, summary, _ = self.run_operation("site-status", workload_exists=False)
+        self.assertEqual(result, 0)
+        self.assertEqual(summary["status"], "success")
+        self.assertIn("foundation-ready-workload-absent", prework.trace)
+        self.assertNotIn("terraform-init", prework.trace)
+        self.assertNotIn("status-cloudfront", prework.trace)
+
     def test_failures_stop_at_each_mutation_boundary_and_cleanup(self) -> None:
         cases = (
             ("sts-identity", "safe-failure", ("terraform-plan", "terraform-apply", "site-upload")),
+            ("foundation-template", "safe-failure", ("terraform-init", "terraform-plan", "terraform-apply", "site-upload")),
             ("terraform-plan", "safe-failure", ("terraform-apply", "site-upload")),
             ("terraform-apply", "inspection-required", ("site-upload",)),
             ("site-upload", "inspection-required", ("site-reconcile", "cloudfront-invalidate")),

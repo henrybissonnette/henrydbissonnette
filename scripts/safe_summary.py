@@ -15,6 +15,7 @@ CATEGORIES = {
     "none",
     "validation-failed",
     "identity-failed",
+    "foundation-failed",
     "initialization-failed",
     "plan-failed",
     "apply-uncertain",
