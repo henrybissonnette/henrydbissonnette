@@ -241,8 +241,11 @@ def check_terraform() -> None:
         'viewer_protocol_policy = "redirect-to-https"',
         "compress               = true",
         'response_page_path    = "/404.html"',
-        "cloudfront_default_certificate = !var.custom_domain_enabled",
-        'minimum_protocol_version       = var.custom_domain_enabled ? "TLSv1.2_2021" : "TLSv1"',
+        "for_each = var.custom_domain_enabled ? [] : [true]",
+        "cloudfront_default_certificate = true",
+        "for_each = var.custom_domain_enabled ? [true] : []",
+        'ssl_support_method       = "sni-only"',
+        'minimum_protocol_version = "TLSv1.2_2021"',
     ):
         require(required in cloudfront, f"CloudFront: missing behavior {required}")
     require(cloudfront.count("custom_error_response {") == 2, "CloudFront: exact 403 and 404 mappings required")
