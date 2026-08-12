@@ -131,6 +131,7 @@ class SafeSummaryTests(unittest.TestCase):
         plan = {
             "resource_changes": [
                 {
+                    "type": "aws_secret",
                     "address": f"aws_secret.{sentinel}",
                     "change": {
                         "actions": ["create", "delete"],
@@ -139,18 +140,30 @@ class SafeSummaryTests(unittest.TestCase):
                         "after_sensitive": {"token": True},
                     },
                 },
-                {"address": "aws_s3_bucket.site", "change": {"actions": ["update"]}},
+                {"type": "aws_s3_bucket", "address": "aws_s3_bucket.site", "change": {"actions": ["update"]}},
             ],
             "diagnostics": [{"detail": sentinel}],
             "variables": {"private_email": {"value": sentinel}},
         }
-        summary = build_summary("d" * 40, "none", "success", plan)
+        bounded = bounded_action_plan(plan)
+        self.assertEqual(
+            bounded,
+            {"resource_changes": [
+                {"type": "aws_secret", "change": {"actions": ["create", "delete"]}},
+                {"type": "aws_s3_bucket", "change": {"actions": ["update"]}},
+            ]},
+        )
+        summary = build_summary("d" * 40, "none", "success", bounded)
         self.assertEqual(
             list(summary),
-            ["source_sha", "account", "region", "action_counts", "public_endpoints", "category", "status"],
+            ["source_sha", "account", "region", "action_counts", "action_counts_by_type", "public_endpoints", "category", "status"],
         )
         self.assertEqual(summary["action_counts"]["replace"], 1)
         self.assertEqual(summary["action_counts"]["update"], 1)
+        self.assertEqual(summary["action_counts_by_type"], [
+            {"resource_type": "aws_s3_bucket", "action": "update", "count": 1},
+            {"resource_type": "aws_secret", "action": "replace", "count": 1},
+        ])
         encoded = json.dumps(summary)
         self.assertNotIn(sentinel, encoded)
         self.assertNotIn("address", encoded)
@@ -175,6 +188,14 @@ class SafeSummaryTests(unittest.TestCase):
             {"staging_hostname": "SENTINEL", "authoritative_name_servers": []},
         )
         self.assertEqual(hostile_endpoint, first)
+
+        hostile_type = build_summary(
+            "e" * 40,
+            "none",
+            "success",
+            {"resource_changes": [{"type": "aws_safe\nSENTINEL", "change": {"actions": ["update"]}}]},
+        )
+        self.assertEqual(hostile_type, first)
 
 
 class PublicProbeTests(unittest.TestCase):
@@ -254,6 +275,7 @@ class FakeRunner(CommandRunner):
             "foundation-state-namespace": json.dumps({"Contents": [{"Key": "main/terraform.tfstate"}]} if self.workload_exists else {"KeyCount": 0}),
             "terraform-show-plan": json.dumps({
                 **({} if self.refresh_plan else {"resource_changes": [{
+                    "type": "aws_cloudfront_distribution",
                     "address": "SENTINEL_PRIVATE_ADDRESS",
                     "change": {
                         "actions": ["update"],
@@ -261,6 +283,7 @@ class FakeRunner(CommandRunner):
                     },
                 }]}),
                 **({} if self.no_drift else {"resource_drift": [{
+                    "type": "aws_cloudfront_distribution",
                     "address": "SENTINEL_PRIVATE_DRIFT_ADDRESS",
                     "change": None if self.malformed_plan else {
                         "actions": ["update"],
@@ -406,6 +429,11 @@ class OperationTraceTests(unittest.TestCase):
         refresh, result, refresh_summary, refresh_runner = self.run_operation("refresh-plan")
         self.assertEqual(result, 0)
         self.assertEqual(refresh_summary["action_counts"]["update"], 1)
+        self.assertEqual(refresh_summary["action_counts_by_type"], [{
+            "resource_type": "aws_cloudfront_distribution",
+            "action": "update",
+            "count": 1,
+        }])
         plan_command = refresh_runner.commands_by_label["terraform-plan"]
         self.assertIn("-refresh-only", plan_command)
         self.assertFalse(any("apply" in command for command in refresh_runner.commands))
@@ -421,6 +449,7 @@ class OperationTraceTests(unittest.TestCase):
             "read": 0,
             "no-op": 0,
         })
+        self.assertEqual(no_drift_summary["action_counts_by_type"], [])
         self.assertNotIn("terraform-apply", no_drift.trace)
 
         status, result, _, _ = self.run_operation("site-status")
@@ -435,6 +464,7 @@ class OperationTraceTests(unittest.TestCase):
         self.assertEqual(summary["status"], "success")
         self.assertEqual(summary["category"], "foundation-ready")
         self.assertEqual(summary["action_counts"], {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0})
+        self.assertEqual(summary["action_counts_by_type"], [])
         self.assertEqual(summary["public_endpoints"], {"staging_hostname": None, "authoritative_name_servers": []})
         self.assertIn("foundation-ready-workload-absent", prework.trace)
         self.assertNotIn("terraform-init", prework.trace)
@@ -456,6 +486,7 @@ class OperationTraceTests(unittest.TestCase):
             "read": 0,
             "no-op": 0,
         })
+        self.assertEqual(summary["action_counts_by_type"], [])
         self.assertIn("terraform-show-plan", executor.trace)
 
     def test_missing_ordinary_changes_cannot_fabricate_convergence(self) -> None:

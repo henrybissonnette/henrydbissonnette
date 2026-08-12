@@ -55,10 +55,13 @@ logged or uploaded.
   changes cloud configuration.
 
 The public result contains exactly the source SHA, expected account and region,
-aggregate resource-action counts, the validated public CloudFront staging
-hostname and four Route 53 authoritative nameservers when the workload outputs
-are available, one closed diagnostic category, and one closed final status. It
-is written to the job summary and repeated as one machine-readable log line so
+aggregate resource-action counts, aggregate non-no-op counts grouped by validated
+resource type, the validated public CloudFront staging hostname and four Route 53
+authoritative nameservers when the workload outputs are available, one closed
+diagnostic category, and one closed final status. Resource types contain no
+instance names, addresses, or values and are bounded to the committed root's
+resource count with a hard ceiling of 256 changes. It is written to the job
+summary and repeated as one machine-readable log line so
 API-only operators can recover the same bounded result. It is newly constructed
 from those primitives; no raw plan, address, private value, response body,
 diagnostic, or provider message is forwarded. A malformed renderer input

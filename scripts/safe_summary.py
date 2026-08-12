@@ -27,6 +27,8 @@ CATEGORIES = {
 }
 STATUSES = {"success", "safe-failure", "inspection-required"}
 ZERO_COUNTS = {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0}
+RESOURCE_TYPE = re.compile(r"[a-z][a-z0-9_]{0,127}")
+MAX_RESOURCE_CHANGES = 256
 
 
 def public_endpoints(value: dict[str, Any] | None) -> dict[str, Any]:
@@ -62,6 +64,8 @@ def action_counts(
         return counts
     if not isinstance(changes, list):
         raise ValueError(f"{collection} must be a list")
+    if len(changes) > MAX_RESOURCE_CHANGES:
+        raise ValueError("resource change collection exceeds the public bound")
     for resource in changes:
         if not isinstance(resource, dict):
             raise ValueError("resource change must be an object")
@@ -89,6 +93,36 @@ def action_counts(
     return counts
 
 
+def action_counts_by_type(plan: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Return only aggregate non-no-op actions grouped by safe resource type."""
+    if plan is None:
+        return []
+    changes = plan.get("resource_changes")
+    if not isinstance(changes, list) or len(changes) > MAX_RESOURCE_CHANGES:
+        raise ValueError("resource_changes must be a bounded list")
+    grouped: dict[tuple[str, str], int] = {}
+    for resource in changes:
+        if not isinstance(resource, dict):
+            raise ValueError("resource change must be an object")
+        resource_type = resource.get("type")
+        if not isinstance(resource_type, str) or RESOURCE_TYPE.fullmatch(resource_type) is None:
+            raise ValueError("resource type is outside the public allowlist")
+        actions = resource.get("change", {}).get("actions")
+        if set(actions) == {"create", "delete"}:
+            action = "replace"
+        elif actions in (["create"], ["update"], ["delete"], ["read"], ["no-op"]):
+            action = actions[0]
+        else:
+            raise ValueError("unsupported resource action shape")
+        if action != "no-op":
+            key = (resource_type, action)
+            grouped[key] = grouped.get(key, 0) + 1
+    return [
+        {"resource_type": resource_type, "action": action, "count": count}
+        for (resource_type, action), count in sorted(grouped.items())
+    ]
+
+
 def bounded_action_plan(
     plan: dict[str, Any],
     collection: str = "resource_changes",
@@ -97,12 +131,17 @@ def bounded_action_plan(
     """Validate one Terraform action collection and retain no resource values."""
     action_counts(plan, collection, absent_is_empty)
     changes = plan.get(collection, []) if absent_is_empty else plan[collection]
-    return {
+    bounded = {
         "resource_changes": [
-            {"change": {"actions": list(resource["change"]["actions"])}}
+            {
+                "type": resource.get("type"),
+                "change": {"actions": list(resource["change"]["actions"])},
+            }
             for resource in changes
         ]
     }
+    action_counts_by_type(bounded)
+    return bounded
 
 
 def fixed_renderer_failure() -> dict[str, Any]:
@@ -111,6 +150,7 @@ def fixed_renderer_failure() -> dict[str, Any]:
         "account": EXPECTED_ACCOUNT,
         "region": EXPECTED_REGION,
         "action_counts": dict(ZERO_COUNTS),
+        "action_counts_by_type": [],
         "public_endpoints": public_endpoints(None),
         "category": "renderer-failure",
         "status": "safe-failure",
@@ -134,6 +174,7 @@ def build_summary(
             "account": EXPECTED_ACCOUNT,
             "region": EXPECTED_REGION,
             "action_counts": action_counts(plan),
+            "action_counts_by_type": action_counts_by_type(plan),
             "public_endpoints": public_endpoints(endpoints),
             "category": category,
             "status": status,
