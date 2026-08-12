@@ -86,7 +86,7 @@
             }
           ]
         },
-        "BucketOwnershipControls": {
+        "OwnershipControls": {
           "Rules": [
             {
               "ObjectOwnership": "BucketOwnerEnforced"

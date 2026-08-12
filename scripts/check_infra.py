@@ -118,7 +118,7 @@ def check_bootstrap() -> None:
     )
     encryption = bucket.get("BucketEncryption", {}).get("ServerSideEncryptionConfiguration", [])
     require(encryption == [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}], "TerraformStateBucket: SSE-S3 required")
-    ownership = bucket.get("BucketOwnershipControls", {}).get("Rules", [])
+    ownership = bucket.get("OwnershipControls", {}).get("Rules", [])
     require(ownership == [{"ObjectOwnership": "BucketOwnerEnforced"}], "TerraformStateBucket: bucket-owner enforcement required")
 
     policy_resource = resource(template, "TerraformStateBucketPolicy", "AWS::S3::BucketPolicy")
