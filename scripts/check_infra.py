@@ -80,6 +80,7 @@ def check_bootstrap() -> None:
 
     role = resource(template, "GitHubApplyRole", "AWS::IAM::Role")["Properties"]
     require(role.get("ManagedPolicyArns") == ["arn:aws:iam::aws:policy/AdministratorAccess"], "GitHubApplyRole: expected one broad AdministratorAccess policy")
+    require(role.get("MaxSessionDuration") == 7200, "GitHubApplyRole: session must match the bounded 120-minute workflow")
     trust_statements = role["AssumeRolePolicyDocument"]["Statement"]
     require(len(trust_statements) == 1, "GitHubApplyRole: expected one trust statement")
     trust = trust_statements[0]

@@ -11,7 +11,7 @@ other's resources.
 | AWS account | `241077340022` |
 | Primary and certificate region | `us-east-1` |
 | Bootstrap stack | `henrybissonnette-bootstrap` |
-| GitHub apply role | `henrybissonnette-github-apply` |
+| GitHub apply role | `henrybissonnette-github-apply` (7,200-second maximum session) |
 | Terraform state bucket | `henrybissonnette-terraform-state-241077340022` |
 | Terraform state key | `main/terraform.tfstate` |
 | Terraform lock object | `main/terraform.tfstate.tflock` |
@@ -120,6 +120,9 @@ deployed template, bucket controls, SNS confirmation, and real main-branch OIDC
 assumption. Task 07 must witness real provider plan/apply, direct-S3 denial,
 staging behavior, DNS review/delegation, and state-version recovery. Task 09
 must witness the custom-domain graph and both public hosts.
+
+The serialized execution, inspection, public-summary, and failure-custody
+contract is documented in [`aws-deployment.md`](aws-deployment.md).
 
 ## Bounds and exclusions
 

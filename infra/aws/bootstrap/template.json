@@ -35,7 +35,7 @@
       "Properties": {
         "RoleName": "henrybissonnette-github-apply",
         "Description": "Broad in-account deployment authority for the exact public repository main branch.",
-        "MaxSessionDuration": 3600,
+        "MaxSessionDuration": 7200,
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
