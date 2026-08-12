@@ -52,11 +52,15 @@ logged or uploaded.
   public probes. It never plans, applies, syncs, deletes, invalidates, or
   changes cloud configuration.
 
-The public summary contains exactly the source SHA, expected account and
-region, aggregate resource-action counts, one closed diagnostic category, and
-one closed final status. It is newly constructed from those primitives; no raw
-plan, address, value, output, response body, diagnostic, or provider message is
-forwarded. A malformed renderer input becomes one fixed `renderer-failure`.
+The public result contains exactly the source SHA, expected account and region,
+aggregate resource-action counts, the validated public CloudFront staging
+hostname and four Route 53 authoritative nameservers when the workload outputs
+are available, one closed diagnostic category, and one closed final status. It
+is written to the job summary and repeated as one machine-readable log line so
+API-only operators can recover the same bounded result. It is newly constructed
+from those primitives; no raw plan, address, private value, response body,
+diagnostic, or provider message is forwarded. A malformed renderer input
+becomes one fixed `renderer-failure`.
 The category enum is `none`, `validation-failed`, `identity-failed`,
 `foundation-failed`, `foundation-ready`, `initialization-failed`, `plan-failed`, `apply-uncertain`,
 `publication-failed`, `verification-failed`, `status-failed`, or

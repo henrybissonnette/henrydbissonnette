@@ -175,6 +175,7 @@ class OperationExecutor:
         self.capture_modes: list[int] = []
         self.last_workspace: Path | None = None
         self.plan: dict | None = None
+        self.public_endpoints: dict | None = None
         self.apply_started = False
 
     def checked(
@@ -425,15 +426,43 @@ class OperationExecutor:
         return private_text(path)
 
     def named_outputs(self, runner: CommandRunner, terraform: str) -> tuple[str, str, str]:
+        failure_category = "status-failed" if self.operation == "site-status" else "publication-failed"
+        failure_status = "safe-failure" if self.operation == "site-status" else "inspection-required"
         bucket = self.output(runner, terraform, "content_bucket_name")
         distribution = self.output(runner, terraform, "cloudfront_distribution_id")
         hostname = self.output(runner, terraform, "cloudfront_staging_hostname")
+        name_servers_path = self.checked(
+            runner,
+            "terraform-output-hosted_zone_name_servers",
+            [terraform, f"-chdir={TERRAFORM_ROOT}", "output", "-json", "hosted_zone_name_servers"],
+            failure_category,
+            failure_status,
+        )
+        try:
+            name_servers = json.loads(name_servers_path.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise OperationFailure(failure_category, failure_status) from exc
         if re.fullmatch(r"[a-z0-9.-]+", bucket) is None:
-            raise OperationFailure("status-failed", "safe-failure")
+            raise OperationFailure(failure_category, failure_status)
         if re.fullmatch(r"[A-Z0-9]+", distribution) is None:
-            raise OperationFailure("status-failed", "safe-failure")
-        if re.fullmatch(r"[a-z0-9.-]+", hostname) is None:
-            raise OperationFailure("status-failed", "safe-failure")
+            raise OperationFailure(failure_category, failure_status)
+        if re.fullmatch(r"d[a-z0-9]+\.cloudfront\.net", hostname) is None:
+            raise OperationFailure(failure_category, failure_status)
+        if (
+            not isinstance(name_servers, list)
+            or len(name_servers) != 4
+            or len(set(name_servers)) != 4
+            or not all(
+                isinstance(server, str)
+                and re.fullmatch(r"ns-[0-9]+\.awsdns-[0-9]+\.(?:com|net|org|co\.uk)", server)
+                for server in name_servers
+            )
+        ):
+            raise OperationFailure(failure_category, failure_status)
+        self.public_endpoints = {
+            "staging_hostname": hostname,
+            "authoritative_name_servers": sorted(name_servers),
+        }
         return bucket, distribution, hostname
 
     def deploy(self, runner: CommandRunner, terraform: str, aws: str, workspace: Path, plan_file: Path) -> None:
@@ -586,10 +615,18 @@ class OperationExecutor:
         else:
             os.environ["TF_DATA_DIR"] = previous_tf_data
         try:
-            append_summary(summary, source_sha, category, status, self.plan)
+            encoded_summary = append_summary(
+                summary,
+                source_sha,
+                category,
+                status,
+                self.plan,
+                self.public_endpoints,
+            )
         except Exception:
             print("AWS workflow summary could not be written; the run is non-success.", file=sys.stderr)
             return 1
+        print(f"AWS workflow result: {encoded_summary}")
         if status != "success":
             print("AWS workflow operation failed within its bounded public result contract.", file=sys.stderr)
             return 1

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 import re
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -145,7 +147,7 @@ class SafeSummaryTests(unittest.TestCase):
         summary = build_summary("d" * 40, "none", "success", plan)
         self.assertEqual(
             list(summary),
-            ["source_sha", "account", "region", "action_counts", "category", "status"],
+            ["source_sha", "account", "region", "action_counts", "public_endpoints", "category", "status"],
         )
         self.assertEqual(summary["action_counts"]["replace"], 1)
         self.assertEqual(summary["action_counts"]["update"], 1)
@@ -153,6 +155,7 @@ class SafeSummaryTests(unittest.TestCase):
         self.assertNotIn(sentinel, encoded)
         self.assertNotIn("address", encoded)
         self.assertNotIn("password", encoded)
+        self.assertEqual(summary["public_endpoints"], {"staging_hostname": None, "authoritative_name_servers": []})
 
     def test_malformed_input_returns_one_fixed_safe_failure(self) -> None:
         first = build_summary("not-a-sha", "anything", "success", {"raw": "SECRET"})
@@ -161,6 +164,15 @@ class SafeSummaryTests(unittest.TestCase):
         self.assertEqual(first["category"], "renderer-failure")
         self.assertEqual(first["status"], "safe-failure")
         self.assertNotIn("SECRET", json.dumps(first))
+
+        hostile_endpoint = build_summary(
+            "e" * 40,
+            "none",
+            "success",
+            None,
+            {"staging_hostname": "SENTINEL", "authoritative_name_servers": []},
+        )
+        self.assertEqual(hostile_endpoint, first)
 
 
 class FakeRunner(CommandRunner):
@@ -217,6 +229,12 @@ class FakeRunner(CommandRunner):
             "terraform-output-content_bucket_name": "henry-content-bucket\n",
             "terraform-output-cloudfront_distribution_id": "EDIST123\n",
             "terraform-output-cloudfront_staging_hostname": "d123.cloudfront.net\n",
+            "terraform-output-hosted_zone_name_servers": json.dumps([
+                "ns-1.awsdns-1.com",
+                "ns-2.awsdns-2.net",
+                "ns-3.awsdns-3.org",
+                "ns-4.awsdns-4.co.uk",
+            ]),
             "cloudfront-invalidate": json.dumps({"Invalidation": {"Id": "INV123"}}),
         }
         descriptor = os.open(capture, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -270,9 +288,18 @@ class OperationTraceTests(unittest.TestCase):
             "AWS_BIN": "/fixed/aws",
             "RUNNER_TEMP": str(root),
         }
-        with patch.dict(os.environ, environment, clear=False):
+        public_output = io.StringIO()
+        public_error = io.StringIO()
+        with (
+            patch.dict(os.environ, environment, clear=False),
+            redirect_stdout(public_output),
+            redirect_stderr(public_error),
+        ):
             executor = OperationExecutor(operation, factory, verifier)
             result = executor.execute()
+        self.assertEqual(public_output.getvalue().count("AWS workflow result: "), 1)
+        self.assertNotIn("SENTINEL", public_output.getvalue())
+        self.assertNotIn("SENTINEL", public_error.getvalue())
         encoded = re.search(r"`(\{.*\})`", summary.read_text(encoding="utf-8")).group(1)
         return executor, result, json.loads(encoded), created[0]
 
@@ -280,6 +307,8 @@ class OperationTraceTests(unittest.TestCase):
         deploy, result, summary, runner = self.run_operation("deploy")
         self.assertEqual(result, 0)
         self.assertEqual(summary["status"], "success")
+        self.assertEqual(summary["public_endpoints"]["staging_hostname"], "d123.cloudfront.net")
+        self.assertEqual(len(summary["public_endpoints"]["authoritative_name_servers"]), 4)
         ordered = [
             "terraform-plan",
             "terraform-show-plan",
@@ -334,6 +363,7 @@ class OperationTraceTests(unittest.TestCase):
         self.assertEqual(summary["status"], "success")
         self.assertEqual(summary["category"], "foundation-ready")
         self.assertEqual(summary["action_counts"], {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0})
+        self.assertEqual(summary["public_endpoints"], {"staging_hostname": None, "authoritative_name_servers": []})
         self.assertIn("foundation-ready-workload-absent", prework.trace)
         self.assertNotIn("terraform-init", prework.trace)
         self.assertNotIn("terraform-plan", prework.trace)
