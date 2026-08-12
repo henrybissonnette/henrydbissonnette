@@ -34,6 +34,16 @@ run "staging_increment" {
   }
 
   assert {
+    condition = (
+      aws_route53_record.retained_apex_verification.type == "TXT" &&
+      length(aws_route53_record.retained_apex_verification.records) == 1 &&
+      aws_route53_record.retained_www_cname.type == "CNAME" &&
+      length(aws_route53_record.retained_www_cname.records) == 1
+    )
+    error_message = "staging must retain the two explicitly reviewed public DNS records"
+  }
+
+  assert {
     condition     = length(aws_acm_certificate.site) == 0
     error_message = "staging must not request an ACM certificate before Route 53 is authoritative"
   }
@@ -69,6 +79,16 @@ run "custom_domain_increment" {
 
   variables {
     custom_domain_enabled = true
+  }
+
+  assert {
+    condition = (
+      aws_route53_record.retained_apex_verification.type == "TXT" &&
+      length(aws_route53_record.retained_apex_verification.records) == 1 &&
+      aws_route53_record.retained_www_cname.type == "CNAME" &&
+      length(aws_route53_record.retained_www_cname.records) == 1
+    )
+    error_message = "custom-domain increment must preserve the retained public DNS records"
   }
 
   assert {

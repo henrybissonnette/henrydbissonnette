@@ -66,10 +66,11 @@ function, default-certificate CloudFront distribution, and budget. Name.com
 remains authoritative, so neither ACM validation nor public aliases can block
 staging.
 
-After staging is verified, add every reviewed surviving public DNS record from
-the private name.com export as an explicit `aws_route53_record` beside the
-documented extension point in `dns.tf`. Do not commit or import the export and
-do not introduce a generic record importer. Delegate at the registrar and wait
+After staging is verified, retain every reviewed surviving public DNS record
+from the private name.com export as an explicit `aws_route53_record` in
+`dns.tf`. The reviewed records are committed there; the export is neither
+committed nor imported, and there is no generic record importer. Delegate at
+the registrar and wait
 until the Route 53 name servers are observably authoritative.
 
 Only then change `custom_domain_enabled` to `true`. The second increment adds

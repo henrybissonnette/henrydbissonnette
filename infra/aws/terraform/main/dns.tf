@@ -7,8 +7,24 @@ resource "aws_route53_zone" "site" {
   }
 }
 
-# Task 07 adds each explicitly reviewed surviving public name.com record here
-# before delegation. There is deliberately no generic CSV or secret input path.
+# Task 07 retains each explicitly reviewed public name.com record here before
+# delegation. There is deliberately no generic CSV or secret input path.
+
+resource "aws_route53_record" "retained_apex_verification" {
+  zone_id = aws_route53_zone.site.zone_id
+  name    = "henrybissonnette.com"
+  type    = "TXT"
+  ttl     = 300
+  records = ["google-site-verification=G1ISOgU5AZR-HXJGukw6MuAFp0gndUyIVG63utRRl70"]
+}
+
+resource "aws_route53_record" "retained_www_cname" {
+  zone_id = aws_route53_zone.site.zone_id
+  name    = "www.henrybissonnette.com"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["ghs.google.com."]
+}
 
 resource "aws_acm_certificate" "site" {
   count = var.custom_domain_enabled ? 1 : 0
