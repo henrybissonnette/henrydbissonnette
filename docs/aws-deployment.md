@@ -2,7 +2,7 @@
 
 `.github/workflows/aws.yml` is the repository's only routine AWS credential
 executor. A push to `main` resolves to `deploy`; a manual run on `main` accepts
-only `deploy`, `plan`, `refresh-plan`, or `site-status`. One constant
+only `deploy`, `plan`, `refresh-plan`, `site-status`, or `recover-lock`. One constant
 non-cancelling maximal concurrency queue serializes every operation, and the
 credentialed job has a 120-minute ceiling. The maximal queue retains pending
 runs up to GitHub's current service limit; overflow is a visible non-started
@@ -53,6 +53,13 @@ logged or uploaded.
   outputs, CloudFront metadata, origin public-access controls, and the fixed
   public probes. It never plans, applies, syncs, deletes, invalidates, or
   changes cloud configuration.
+- `recover-lock` is the fixed hard-cancellation recovery path. Under the same
+  exact-main identity and serialized queue, it privately validates the sole
+  native lock object's Terraform lock ID, operation, exact backend path, and a
+  minimum age of five minutes, invokes `terraform force-unlock` for that ID,
+  and verifies that only the adjacent lock object disappeared. An absent lock
+  is a successful no-op. It never plans, applies, publishes, invalidates, or
+  reads state contents.
 
 The public result contains exactly the source SHA, expected account and region,
 aggregate resource-action counts, aggregate non-no-op counts grouped by validated
@@ -69,7 +76,8 @@ becomes one fixed `renderer-failure`.
 The category enum is `none`, `validation-failed`, `identity-failed`,
 `foundation-failed`, `foundation-ready`, `initialization-failed`,
 `plan-failed`, `apply-uncertain`, `publication-failed`,
-`verification-failed`, `status-failed`, or `renderer-failure`. Final status
+`verification-failed`, `status-failed`, `lock-recovery-failed`, or
+`renderer-failure`. Final status
 is exactly `success`, `safe-failure`, or `inspection-required`.
 
 ## Dispatch and durable observation
@@ -81,6 +89,7 @@ Record the exact local commit before publication. A push of that commit to
 gh workflow run aws.yml --ref main -f operation=site-status
 gh workflow run aws.yml --ref main -f operation=plan
 gh workflow run aws.yml --ref main -f operation=refresh-plan
+gh workflow run aws.yml --ref main -f operation=recover-lock
 ```
 
 Do not supply a tag, pull-request ref, alternate branch, path, command, region,
@@ -107,6 +116,12 @@ exists but whose named outputs are incomplete reports `status-failed`, making
 `plan` the next read-only reconciliation instrument. Inspect the exact prior
 GitHub run before choosing another deliberate action. Never blindly retry or
 infer success from an absent summary.
+
+If a hard-cancelled Terraform process leaves the exact native lock object,
+first observe the cancelled run to terminal state and prove no other operation
+is active. After the five-minute floor, use `recover-lock` once, then rerun
+read-only reconciliation before any deployment. Do not delete the object with
+an out-of-band S3 command or treat force-unlock as state recovery.
 
 An ordinary content regression is reverted in source and deployed through the
 same path. State-version recovery follows the diagnosis-first private procedure

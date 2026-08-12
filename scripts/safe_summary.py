@@ -23,6 +23,7 @@ CATEGORIES = {
     "publication-failed",
     "verification-failed",
     "status-failed",
+    "lock-recovery-failed",
     "renderer-failure",
 }
 STATUSES = {"success", "safe-failure", "inspection-required"}

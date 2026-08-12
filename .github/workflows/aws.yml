@@ -16,6 +16,7 @@ on:
           - plan
           - refresh-plan
           - site-status
+          - recover-lock
 
 permissions:
   contents: read

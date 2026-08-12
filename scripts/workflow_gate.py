@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 
-OPERATIONS = {"deploy", "plan", "refresh-plan", "site-status"}
+OPERATIONS = {"deploy", "plan", "refresh-plan", "site-status", "recover-lock"}
 MAIN_REF = "refs/heads/main"
 
 

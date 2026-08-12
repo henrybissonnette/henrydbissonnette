@@ -47,7 +47,7 @@ class WorkflowSourceTests(unittest.TestCase):
     def test_dispatch_has_only_the_closed_operation_enum(self) -> None:
         input_block = self.source.split("inputs:", 1)[1].split("permissions:", 1)[0]
         self.assertEqual(re.findall(r"^      ([a-z_-]+):$", input_block, flags=re.MULTILINE), ["operation"])
-        for operation in ("deploy", "plan", "refresh-plan", "site-status"):
+        for operation in ("deploy", "plan", "refresh-plan", "site-status", "recover-lock"):
             self.assertIn(f"          - {operation}\n", input_block)
         for forbidden in ("command", "path", "root", "account", "region", "target", "probe"):
             self.assertNotRegex(input_block, rf"^\s+{forbidden}:")
@@ -106,7 +106,7 @@ class WorkflowGateTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         self.assertEqual(resolve_operation("push", "refs/heads/main", "site-status", sha, root), "deploy")
-        for operation in ("deploy", "plan", "refresh-plan", "site-status"):
+        for operation in ("deploy", "plan", "refresh-plan", "site-status", "recover-lock"):
             self.assertEqual(resolve_operation("workflow_dispatch", "refs/heads/main", operation, sha, root), operation)
 
     def test_unsupported_event_ref_operation_and_checkout_fail_closed(self) -> None:
@@ -225,6 +225,8 @@ class FakeRunner(CommandRunner):
         malformed_foundation: bool = False,
         malformed_invalidation: bool = False,
         no_drift: bool = False,
+        lock_exists: bool = True,
+        lock_created: str = "2026-08-12T00:00:00Z",
     ):
         super().__init__(workspace)
         self.fail_at = fail_at
@@ -234,6 +236,8 @@ class FakeRunner(CommandRunner):
         self.malformed_foundation = malformed_foundation
         self.malformed_invalidation = malformed_invalidation
         self.no_drift = no_drift
+        self.lock_exists = lock_exists
+        self.lock_created = lock_created
         self.refresh_plan = False
         self.commands: list[list[str]] = []
         self.commands_by_label: dict[str, list[str]] = {}
@@ -304,6 +308,11 @@ class FakeRunner(CommandRunner):
                 {"Invalidation": "malformed"}
                 if self.malformed_invalidation else {"Invalidation": {"Id": "INV123"}}
             ),
+            "state-lock-list-before": json.dumps(
+                {"Contents": [{"Key": "main/terraform.tfstate.tflock"}]} if self.lock_exists else {"KeyCount": 0}
+            ),
+            "state-lock-list-after": json.dumps({"KeyCount": 0}),
+            "state-lock-get": json.dumps({"ContentLength": 256}),
         }
         descriptor = os.open(capture, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -313,6 +322,19 @@ class FakeRunner(CommandRunner):
             plan_path = Path(next(argument.removeprefix("-out=") for argument in command if argument.startswith("-out=")))
             plan_descriptor = os.open(plan_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             os.close(plan_descriptor)
+        if label == "state-lock-get":
+            lock_path = Path(command[-1])
+            lock_path.write_text(
+                json.dumps({
+                    "ID": "12345678-1234-1234-1234-123456789abc",
+                    "Operation": "OperationTypeApply",
+                    "Path": "henrybissonnette-terraform-state-241077340022/main/terraform.tfstate",
+                    "Who": "runner@example",
+                    "Version": "1.15.8",
+                    "Created": self.lock_created,
+                }),
+                encoding="utf-8",
+            )
         if label == self.unexpected_at:
             raise RuntimeError("synthetic unexpected failure")
         if label == self.fail_at:
@@ -332,6 +354,8 @@ class OperationTraceTests(unittest.TestCase):
         malformed_foundation: bool = False,
         malformed_invalidation: bool = False,
         no_drift: bool = False,
+        lock_exists: bool = True,
+        lock_created: str = "2026-08-12T00:00:00Z",
     ) -> tuple[OperationExecutor, int, dict, FakeRunner]:
         outer = tempfile.TemporaryDirectory()
         self.addCleanup(outer.cleanup)
@@ -349,6 +373,8 @@ class OperationTraceTests(unittest.TestCase):
                 malformed_foundation,
                 malformed_invalidation,
                 no_drift,
+                lock_exists,
+                lock_created,
             )
             created.append(runner)
             return runner
@@ -471,6 +497,31 @@ class OperationTraceTests(unittest.TestCase):
         self.assertNotIn("terraform-plan", prework.trace)
         self.assertNotIn("terraform-apply", prework.trace)
         self.assertNotIn("status-cloudfront", prework.trace)
+
+        recovery, result, recovery_summary, recovery_runner = self.run_operation("recover-lock")
+        self.assertEqual(result, 0)
+        self.assertEqual(recovery_summary["status"], "success")
+        self.assertIn("state-lock-recovered", recovery.trace)
+        self.assertNotIn("terraform-plan", recovery.trace)
+        self.assertNotIn("terraform-apply", recovery.trace)
+        self.assertNotIn("site-upload", recovery.trace)
+        unlock = recovery_runner.commands_by_label["terraform-force-unlock"]
+        self.assertEqual(unlock[-2:], ["-force", "12345678-1234-1234-1234-123456789abc"])
+
+        absent, result, absent_summary, _ = self.run_operation("recover-lock", lock_exists=False)
+        self.assertEqual(result, 0)
+        self.assertEqual(absent_summary["status"], "success")
+        self.assertIn("state-lock-absent", absent.trace)
+        self.assertNotIn("terraform-force-unlock", absent.trace)
+
+        recent, result, recent_summary, _ = self.run_operation(
+            "recover-lock",
+            lock_created="2999-01-01T00:00:00Z",
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(recent_summary["category"], "lock-recovery-failed")
+        self.assertEqual(recent_summary["status"], "safe-failure")
+        self.assertNotIn("terraform-force-unlock", recent.trace)
 
     def test_malformed_plan_is_a_bounded_plan_failure(self) -> None:
         executor, result, summary, _ = self.run_operation("refresh-plan", malformed_plan=True)

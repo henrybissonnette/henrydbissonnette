@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -34,7 +35,7 @@ EXPECTED_OIDC_SUBJECT = "repo:henrybissonnette/henrydbissonnette:ref:refs/heads/
 BOOTSTRAP_TEMPLATE = ROOT / "infra/aws/bootstrap/template.json"
 EXPECTED_TERRAFORM_VERSION = (ROOT / ".terraform-version").read_text(encoding="utf-8").strip()
 EXPECTED_AWS_CLI_VERSION = (ROOT / ".aws-cli-version").read_text(encoding="utf-8").strip()
-OPERATIONS = ("deploy", "plan", "refresh-plan", "site-status")
+OPERATIONS = ("deploy", "plan", "refresh-plan", "site-status", "recover-lock")
 REDIRECT_QUERY = (("source", "workflow"), ("empty", ""))
 
 
@@ -587,6 +588,98 @@ class OperationExecutor:
             raise OperationFailure("status-failed", "safe-failure") from exc
         runner.trace.append("public-verification")
 
+    def state_lock_keys(self, runner: CommandRunner, aws: str, label: str) -> list[str]:
+        listing = private_json(
+            self.checked(
+                runner,
+                label,
+                [
+                    aws,
+                    "s3api",
+                    "list-objects-v2",
+                    "--bucket",
+                    EXPECTED_BACKEND_BUCKET,
+                    "--prefix",
+                    f"{EXPECTED_BACKEND_KEY}.tflock",
+                    "--max-keys",
+                    "2",
+                    "--output",
+                    "json",
+                    "--no-cli-pager",
+                ],
+                "lock-recovery-failed",
+            )
+        )
+        contents = listing.get("Contents", [])
+        if not isinstance(contents, list):
+            raise OperationFailure("lock-recovery-failed", "safe-failure")
+        try:
+            keys = [item["Key"] for item in contents]
+        except (KeyError, TypeError) as exc:
+            raise OperationFailure("lock-recovery-failed", "safe-failure") from exc
+        expected = f"{EXPECTED_BACKEND_KEY}.tflock"
+        if any(not isinstance(key, str) or key != expected for key in keys) or len(keys) > 1:
+            raise OperationFailure("lock-recovery-failed", "safe-failure")
+        return keys
+
+    def recover_lock(self, runner: CommandRunner, terraform: str, aws: str, workspace: Path) -> None:
+        lock_key = f"{EXPECTED_BACKEND_KEY}.tflock"
+        if not self.state_lock_keys(runner, aws, "state-lock-list-before"):
+            runner.trace.append("state-lock-absent")
+            return
+
+        lock_file = workspace / "terraform-lock.private"
+        self.checked(
+            runner,
+            "state-lock-get",
+            [
+                aws,
+                "s3api",
+                "get-object",
+                "--bucket",
+                EXPECTED_BACKEND_BUCKET,
+                "--key",
+                lock_key,
+                "--no-cli-pager",
+                str(lock_file),
+            ],
+            "lock-recovery-failed",
+        )
+        try:
+            lock = private_json(lock_file)
+            lock_id = lock.get("ID")
+            operation = lock.get("Operation")
+            created_text = lock.get("Created")
+            path = lock.get("Path")
+            if not isinstance(lock_id, str) or re.fullmatch(
+                r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+                lock_id,
+            ) is None:
+                raise ValueError("lock ID is invalid")
+            if operation not in {"OperationTypeApply", "OperationTypePlan", "OperationTypeRefreshOnlyPlan"}:
+                raise ValueError("lock operation is invalid")
+            if path != f"{EXPECTED_BACKEND_BUCKET}/{EXPECTED_BACKEND_KEY}":
+                raise ValueError("lock path is invalid")
+            if not isinstance(created_text, str):
+                raise ValueError("lock creation time is invalid")
+            created = datetime.fromisoformat(created_text.replace("Z", "+00:00"))
+            now = datetime.now(UTC)
+            if created > now or now - created < timedelta(minutes=5):
+                raise ValueError("lock is not old enough for recovery")
+        except (AttributeError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise OperationFailure("lock-recovery-failed", "safe-failure") from exc
+
+        self.checked(
+            runner,
+            "terraform-force-unlock",
+            [terraform, f"-chdir={TERRAFORM_ROOT}", "force-unlock", "-force", lock_id],
+            "lock-recovery-failed",
+            "inspection-required",
+        )
+        if self.state_lock_keys(runner, aws, "state-lock-list-after"):
+            raise OperationFailure("lock-recovery-failed", "inspection-required")
+        runner.trace.append("state-lock-recovered")
+
     def execute(self) -> int:
         os.umask(0o077)
         source_sha = os.environ.get("GITHUB_SHA", "")
@@ -619,6 +712,8 @@ class OperationExecutor:
                         self.site_status(runner, terraform, aws)
                     else:
                         category = "foundation-ready"
+                elif self.operation == "recover-lock":
+                    self.recover_lock(runner, terraform, aws, workspace)
                 else:
                     plan_file = self.create_plan(runner, terraform, workspace)
                     if self.operation == "deploy":
