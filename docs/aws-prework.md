@@ -1,7 +1,8 @@
 # AWS pre-work for henrybissonnette.com
 
-Status: member account created; account guardrails, registrar readiness, and
-the one-time bootstrap remain to be completed.
+Status: member account created; tracker task `06_authorize_bootstrap_foundation`
+records the one-time bootstrap as completed through the project-owned AWS CLI
+path. Account guardrails and registrar readiness remain to be completed.
 
 This is the authoritative guide to the remaining human-owned preparation. It
 does not authorize manual creation of website infrastructure. After the finite
@@ -76,6 +77,12 @@ all retained records, certificates, staging site, and rollback evidence pass
 their later checks.
 
 ### 3. Launch the exact bootstrap template once
+
+Status: tracker task `06_authorize_bootstrap_foundation` records stack
+`henrybissonnette-bootstrap` as created and termination-protected, so this is
+no longer an outstanding action. Check the current stack status before
+performing any step below; the console procedure is retained only as the
+relaunch and recovery reference.
 
 After the CloudFormation template under `infra/aws/bootstrap/` is committed and
 published on remote `main`, the project will provide its exact commit and
