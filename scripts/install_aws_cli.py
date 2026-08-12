@@ -19,7 +19,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = (ROOT / ".aws-cli-version").read_text(encoding="utf-8").strip()
-ARCHIVE_SHA256 = "b665b24dae1ed70bc38ef03998570307a0363839196b564bf04f8d7502132b9a"
+ARCHIVES = {
+    "aarch64": (
+        "aarch64",
+        "4cad0c3f28d6f598863dfe9cfef7fd166e23b853a9ccddd1b73a0938c92ce3e4",
+    ),
+    "amd64": (
+        "x86_64",
+        "b665b24dae1ed70bc38ef03998570307a0363839196b564bf04f8d7502132b9a",
+    ),
+    "arm64": (
+        "aarch64",
+        "4cad0c3f28d6f598863dfe9cfef7fd166e23b853a9ccddd1b73a0938c92ce3e4",
+    ),
+    "x86_64": (
+        "x86_64",
+        "b665b24dae1ed70bc38ef03998570307a0363839196b564bf04f8d7502132b9a",
+    ),
+}
 
 
 def safe_extract(archive: zipfile.ZipFile, destination: Path) -> None:
@@ -37,8 +54,8 @@ def safe_extract(archive: zipfile.ZipFile, destination: Path) -> None:
             target.chmod(permissions)
 
 
-def download(destination: Path) -> None:
-    url = f"https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{VERSION}.zip"
+def download(destination: Path, archive_architecture: str, expected_sha256: str) -> None:
+    url = f"https://awscli.amazonaws.com/awscli-exe-linux-{archive_architecture}-{VERSION}.zip"
     digest = hashlib.sha256()
     try:
         with urllib.request.urlopen(url, timeout=120) as response, destination.open("wb") as output:
@@ -47,7 +64,7 @@ def download(destination: Path) -> None:
                 output.write(chunk)
     except (OSError, urllib.error.URLError) as exc:
         raise RuntimeError("pinned AWS CLI download failed") from exc
-    if digest.hexdigest() != ARCHIVE_SHA256:
+    if digest.hexdigest() != expected_sha256:
         raise RuntimeError("pinned AWS CLI archive digest mismatch")
 
 
@@ -63,9 +80,11 @@ def main() -> int:
     parser.add_argument("--install-root", type=Path, required=True)
     parser.add_argument("--bin-dir", type=Path, required=True)
     args = parser.parse_args()
-    if platform.system() != "Linux" or platform.machine().lower() not in {"x86_64", "amd64"}:
-        print("ERROR: pinned AWS CLI workflow tool supports the GitHub Linux x64 runner only", file=sys.stderr)
+    machine = platform.machine().lower()
+    if platform.system() != "Linux" or machine not in ARCHIVES:
+        print("ERROR: pinned AWS CLI tool supports Linux x64 and arm64 only", file=sys.stderr)
         return 1
+    archive_architecture, expected_sha256 = ARCHIVES[machine]
     install_root = args.install_root.resolve()
     bin_dir = args.bin_dir.resolve()
     binary = bin_dir / "aws"
@@ -78,7 +97,7 @@ def main() -> int:
                 shutil.rmtree(work)
             work.mkdir(parents=True, mode=0o700)
             archive_path = work / "awscliv2.zip"
-            download(archive_path)
+            download(archive_path, archive_architecture, expected_sha256)
             with zipfile.ZipFile(archive_path) as archive:
                 safe_extract(archive, work)
             bin_dir.mkdir(parents=True, exist_ok=True)

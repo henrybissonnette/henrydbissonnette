@@ -62,6 +62,8 @@ class WorkflowSourceTests(unittest.TestCase):
         self.assertEqual((ROOT / ".aws-cli-version").read_text(encoding="utf-8").strip(), "2.36.21")
         installer = (ROOT / "scripts/install_aws_cli.py").read_text(encoding="utf-8")
         self.assertIn("b665b24dae1ed70bc38ef03998570307a0363839196b564bf04f8d7502132b9a", installer)
+        self.assertIn("4cad0c3f28d6f598863dfe9cfef7fd166e23b853a9ccddd1b73a0938c92ce3e4", installer)
+        self.assertIn('"aarch64"', installer)
 
     def test_validation_precedes_oidc_and_uses_actual_checks(self) -> None:
         validation = self.source.split("  aws-operation:", 1)[0]
