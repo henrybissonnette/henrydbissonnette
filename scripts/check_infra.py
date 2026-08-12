@@ -193,7 +193,12 @@ def check_terraform() -> None:
     require(types.count("aws_s3_bucket") == 1, "terraform: expected one content bucket")
     require(types.count("aws_budgets_budget") == 1, "terraform: expected one actual-cost budget")
     require("prevent_destroy = true" in source, "hosted zone: prevent_destroy required")
-    require('custom_domain_enabled = false' in (TERRAFORM / "terraform.tfvars").read_text(encoding="utf-8"), "domain phase: committed initial value must be false")
+    phase = (TERRAFORM / "terraform.tfvars").read_text(encoding="utf-8")
+    phase_assignments = [line.strip() for line in phase.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    require(
+        phase_assignments == ["custom_domain_enabled = true"],
+        "domain phase: committed final value must be true",
+    )
 
     backend = (TERRAFORM / "backend.tf").read_text(encoding="utf-8")
     for required in (

@@ -15,7 +15,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from run_aws_operation import CommandFailure, CommandRunner, OperationExecutor, redirect_matches  # noqa: E402
+from run_aws_operation import CommandFailure, CommandRunner, OperationExecutor, active_hosts, redirect_matches  # noqa: E402
 from safe_summary import bounded_action_plan, build_summary  # noqa: E402
 from workflow_gate import GateFailure, resolve_head, resolve_operation  # noqa: E402
 
@@ -380,7 +380,10 @@ class OperationTraceTests(unittest.TestCase):
             return runner
 
         def verifier(hostname: str, bucket: str, attempts: int, delay: int) -> None:
-            self.assertEqual(hostname, "d123.cloudfront.net")
+            self.assertIn(
+                hostname,
+                {"d123.cloudfront.net", "henrybissonnette.com", "www.henrybissonnette.com"},
+            )
             self.assertEqual(bucket, "henry-content-bucket")
             if fail_verification:
                 raise ValueError("synthetic verifier failure")
@@ -411,6 +414,10 @@ class OperationTraceTests(unittest.TestCase):
         return executor, result, json.loads(encoded), created[0]
 
     def test_all_operation_traces_have_fixed_authority(self) -> None:
+        self.assertEqual(
+            active_hosts("d123.cloudfront.net"),
+            ["d123.cloudfront.net", "henrybissonnette.com", "www.henrybissonnette.com"],
+        )
         deploy, result, summary, runner = self.run_operation("deploy")
         self.assertEqual(result, 0)
         self.assertEqual(summary["status"], "success")
