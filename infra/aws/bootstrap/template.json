@@ -1,0 +1,323 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Permanent GitHub OIDC, Terraform state, and budget notification foundation for henrybissonnette.com.",
+  "Parameters": {
+    "BudgetNotificationEmail": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Private email endpoint for the AWS Budget notification. Supply only during the digest-verified console upload.",
+      "AllowedPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "ConstraintDescription": "must be a valid email address"
+    }
+  },
+  "Resources": {
+    "GitHubOidcProvider": {
+      "Type": "AWS::IAM::OIDCProvider",
+      "Properties": {
+        "Url": "https://token.actions.githubusercontent.com",
+        "ClientIdList": [
+          "sts.amazonaws.com"
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "henrybissonnette"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "cloudformation"
+          }
+        ]
+      }
+    },
+    "GitHubApplyRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "henrybissonnette-github-apply",
+        "Description": "Broad in-account deployment authority for the exact public repository main branch.",
+        "MaxSessionDuration": 3600,
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": {
+                  "Ref": "GitHubOidcProvider"
+                }
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                  "token.actions.githubusercontent.com:sub": "repo:henrybissonnette/henrydbissonnette:ref:refs/heads/main"
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AdministratorAccess"
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "henrybissonnette"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "cloudformation"
+          }
+        ]
+      }
+    },
+    "TerraformStateBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BucketName": "henrybissonnette-terraform-state-241077340022",
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "BucketOwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "henrybissonnette"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "cloudformation"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "terraform-state"
+          }
+        ]
+      }
+    },
+    "TerraformStateBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Bucket": {
+          "Ref": "TerraformStateBucket"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DenyInsecureTransport",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TerraformStateBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${TerraformStateBucket.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            },
+            {
+              "Sid": "AllowApplyRoleBucketInspection",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "GitHubApplyRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Action": [
+                "s3:GetBucketLocation",
+                "s3:ListBucket"
+              ],
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TerraformStateBucket",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "StringLike": {
+                  "s3:prefix": [
+                    "main/terraform.tfstate",
+                    "main/terraform.tfstate.tflock"
+                  ]
+                }
+              }
+            },
+            {
+              "Sid": "AllowApplyRoleStateReadWrite",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "GitHubApplyRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${TerraformStateBucket.Arn}/main/terraform.tfstate"
+              }
+            },
+            {
+              "Sid": "AllowApplyRoleNativeLock",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "GitHubApplyRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Action": [
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${TerraformStateBucket.Arn}/main/terraform.tfstate.tflock"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "BudgetNotificationsTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": "henrybissonnette-budget-notifications",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "henrybissonnette"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "cloudformation"
+          }
+        ]
+      }
+    },
+    "BudgetNotificationsTopicPolicy": {
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "Topics": [
+          {
+            "Ref": "BudgetNotificationsTopic"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowBudgetsPublish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "budgets.amazonaws.com"
+              },
+              "Action": "sns:Publish",
+              "Resource": {
+                "Ref": "BudgetNotificationsTopic"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:budgets::${AWS::AccountId}:*"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "BudgetNotificationSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Protocol": "email",
+        "Endpoint": {
+          "Ref": "BudgetNotificationEmail"
+        },
+        "TopicArn": {
+          "Ref": "BudgetNotificationsTopic"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AccountId": {
+      "Description": "Dedicated AWS account expected by all later automation.",
+      "Value": {
+        "Ref": "AWS::AccountId"
+      }
+    },
+    "ApplyRoleArn": {
+      "Description": "Exact-main GitHub OIDC role used by the serialized deployment workflow.",
+      "Value": {
+        "Fn::GetAtt": [
+          "GitHubApplyRole",
+          "Arn"
+        ]
+      }
+    },
+    "StateBucketName": {
+      "Description": "Retained private S3 bucket for the single Terraform state family.",
+      "Value": {
+        "Ref": "TerraformStateBucket"
+      }
+    },
+    "BudgetTopicArn": {
+      "Description": "Non-secret notification topic identifier consumed by Terraform.",
+      "Value": {
+        "Ref": "BudgetNotificationsTopic"
+      }
+    }
+  }
+}
