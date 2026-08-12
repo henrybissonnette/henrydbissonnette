@@ -97,9 +97,11 @@ invalidation follows. Once apply might have started, any non-success or missing
 verified terminal summary is `inspection-required`. Publication or
 verification failures also require inspection because remote content may be
 partial or unverified. Run `site-status` and, when infrastructure reconciliation
-is needed, `plan` or `refresh-plan`; inspect the exact prior GitHub run before
-choosing another deliberate action. Never blindly retry or infer success from
-an absent summary.
+is needed, `plan` or `refresh-plan`; a partially applied workload whose state
+exists but whose named outputs are incomplete reports `status-failed`, making
+`plan` the next read-only reconciliation instrument. Inspect the exact prior
+GitHub run before choosing another deliberate action. Never blindly retry or
+infer success from an absent summary.
 
 An ordinary content regression is reverted in source and deployed through the
 same path. State-version recovery follows the diagnosis-first private procedure

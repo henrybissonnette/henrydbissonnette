@@ -15,7 +15,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from run_aws_operation import CommandFailure, CommandRunner, OperationExecutor  # noqa: E402
+from run_aws_operation import CommandFailure, CommandRunner, OperationExecutor, redirect_matches  # noqa: E402
 from safe_summary import build_summary  # noqa: E402
 from workflow_gate import GateFailure, resolve_head, resolve_operation  # noqa: E402
 
@@ -173,6 +173,22 @@ class SafeSummaryTests(unittest.TestCase):
             {"staging_hostname": "SENTINEL", "authoritative_name_servers": []},
         )
         self.assertEqual(hostile_endpoint, first)
+
+
+class PublicProbeTests(unittest.TestCase):
+    def test_redirect_query_preservation_is_semantic_not_order_sensitive(self) -> None:
+        self.assertTrue(redirect_matches("/about.html?source=workflow&empty=", "/about.html"))
+        self.assertTrue(redirect_matches("/about.html?empty=&source=workflow", "/about.html"))
+        for mismatch in (
+            "/about.html?source=workflow",
+            "/about.html?source=workflow&empty=&extra=value",
+            "/about.html?source=other&empty=",
+            "https://example.com/about.html?source=workflow&empty=",
+            "/projects.html?source=workflow&empty=",
+            "/about.html?source=workflow&empty=#fragment",
+        ):
+            with self.subTest(mismatch=mismatch):
+                self.assertFalse(redirect_matches(mismatch, "/about.html"))
 
 
 class FakeRunner(CommandRunner):

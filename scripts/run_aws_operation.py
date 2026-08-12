@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import re
@@ -12,6 +13,7 @@ import sys
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Callable, Iterable
@@ -110,6 +112,20 @@ def http_request(url: str) -> tuple[int, dict[str, str], bytes]:
         return exc.code, dict(exc.headers.items()), exc.read()
 
 
+def redirect_matches(location: str | None, expected_path: str) -> bool:
+    if not isinstance(location, str):
+        return False
+    parsed = urllib.parse.urlsplit(location)
+    return (
+        parsed.scheme == ""
+        and parsed.netloc == ""
+        and parsed.path == expected_path
+        and parsed.fragment == ""
+        and Counter(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
+        == Counter((("source", "workflow"), ("empty", "")))
+    )
+
+
 def verify_public_site(hostname: str, bucket: str, attempts: int = 20, delay_seconds: int = 15) -> None:
     if re.fullmatch(r"[a-z0-9.-]+", hostname) is None or re.fullmatch(r"[a-z0-9.-]+", bucket) is None:
         raise ValueError("unsafe named output")
@@ -137,7 +153,7 @@ def verify_public_site(hostname: str, bucket: str, attempts: int = 20, delay_sec
             }.items():
                 status, headers, _ = http_request(f"https://{hostname}{old}?source=workflow&empty=")
                 location = headers.get("Location") or headers.get("location")
-                if status != 308 or location != f"{new}?source=workflow&empty=":
+                if status != 308 or not redirect_matches(location, new):
                     raise ValueError("edge redirect mismatch")
             status, _, _ = http_request(f"https://{bucket}.s3.{EXPECTED_REGION}.amazonaws.com/index.html")
             if status != 403:

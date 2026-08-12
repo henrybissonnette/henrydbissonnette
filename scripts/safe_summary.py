@@ -27,9 +27,6 @@ CATEGORIES = {
 }
 STATUSES = {"success", "safe-failure", "inspection-required"}
 ZERO_COUNTS = {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0}
-EMPTY_PUBLIC_ENDPOINTS = {"staging_hostname": None, "authoritative_name_servers": []}
-
-
 def public_endpoints(value: dict[str, Any] | None) -> dict[str, Any]:
     if value is None:
         return {"staging_hostname": None, "authoritative_name_servers": []}
