@@ -27,6 +27,8 @@ CATEGORIES = {
 }
 STATUSES = {"success", "safe-failure", "inspection-required"}
 ZERO_COUNTS = {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0}
+
+
 def public_endpoints(value: dict[str, Any] | None) -> dict[str, Any]:
     if value is None:
         return {"staging_hostname": None, "authoritative_name_servers": []}
@@ -57,7 +59,10 @@ def action_counts(plan: dict[str, Any] | None) -> dict[str, int]:
     for resource in changes:
         if not isinstance(resource, dict):
             raise ValueError("resource change must be an object")
-        actions = resource.get("change", {}).get("actions")
+        change = resource.get("change")
+        if not isinstance(change, dict):
+            raise ValueError("resource change details must be an object")
+        actions = change.get("actions")
         if not isinstance(actions, list) or not all(isinstance(item, str) for item in actions):
             raise ValueError("resource actions must be a string list")
         action_set = set(actions)

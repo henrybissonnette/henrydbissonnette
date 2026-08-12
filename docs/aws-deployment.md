@@ -62,10 +62,10 @@ from those primitives; no raw plan, address, private value, response body,
 diagnostic, or provider message is forwarded. A malformed renderer input
 becomes one fixed `renderer-failure`.
 The category enum is `none`, `validation-failed`, `identity-failed`,
-`foundation-failed`, `foundation-ready`, `initialization-failed`, `plan-failed`, `apply-uncertain`,
-`publication-failed`, `verification-failed`, `status-failed`, or
-`renderer-failure`. Final status is exactly `success`, `safe-failure`, or
-`inspection-required`.
+`foundation-failed`, `foundation-ready`, `initialization-failed`,
+`plan-failed`, `apply-uncertain`, `publication-failed`,
+`verification-failed`, `status-failed`, or `renderer-failure`. Final status
+is exactly `success`, `safe-failure`, or `inspection-required`.
 
 ## Dispatch and durable observation
 

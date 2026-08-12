@@ -192,11 +192,19 @@ class PublicProbeTests(unittest.TestCase):
 
 
 class FakeRunner(CommandRunner):
-    def __init__(self, workspace: Path, fail_at: str | None = None, unexpected_at: str | None = None, workload_exists: bool = True):
+    def __init__(
+        self,
+        workspace: Path,
+        fail_at: str | None = None,
+        unexpected_at: str | None = None,
+        workload_exists: bool = True,
+        malformed_plan: bool = False,
+    ):
         super().__init__(workspace)
         self.fail_at = fail_at
         self.unexpected_at = unexpected_at
         self.workload_exists = workload_exists
+        self.malformed_plan = malformed_plan
         self.commands: list[list[str]] = []
         self.commands_by_label: dict[str, list[str]] = {}
 
@@ -232,16 +240,15 @@ class FakeRunner(CommandRunner):
             "foundation-public-block": json.dumps({"PublicAccessBlockConfiguration": {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True}}),
             "foundation-subscription": json.dumps({"Subscriptions": [{"Protocol": "email", "SubscriptionArn": "SENTINEL_PRIVATE_SUBSCRIPTION_ARN"}]}),
             "foundation-state-namespace": json.dumps({"Contents": [{"Key": "main/terraform.tfstate"}]} if self.workload_exists else {"KeyCount": 0}),
-            "terraform-show-plan": json.dumps(
-                {
-                    "resource_changes": [
-                        {
-                            "address": "SENTINEL_PRIVATE_ADDRESS",
-                            "change": {"actions": ["update"], "before": {"secret": "SENTINEL"}},
-                        }
-                    ]
-                }
-            ),
+            "terraform-show-plan": json.dumps({
+                "resource_changes": [{
+                    "address": "SENTINEL_PRIVATE_ADDRESS",
+                    "change": None if self.malformed_plan else {
+                        "actions": ["update"],
+                        "before": {"secret": "SENTINEL"},
+                    },
+                }]
+            }),
             "terraform-output-content_bucket_name": "henry-content-bucket\n",
             "terraform-output-cloudfront_distribution_id": "EDIST123\n",
             "terraform-output-cloudfront_staging_hostname": "d123.cloudfront.net\n",
@@ -276,6 +283,7 @@ class OperationTraceTests(unittest.TestCase):
         fail_verification: bool = False,
         unexpected_at: str | None = None,
         workload_exists: bool = True,
+        malformed_plan: bool = False,
     ) -> tuple[OperationExecutor, int, dict, FakeRunner]:
         outer = tempfile.TemporaryDirectory()
         self.addCleanup(outer.cleanup)
@@ -284,7 +292,7 @@ class OperationTraceTests(unittest.TestCase):
         created: list[FakeRunner] = []
 
         def factory(workspace: Path) -> FakeRunner:
-            runner = FakeRunner(workspace, fail_at, unexpected_at, workload_exists)
+            runner = FakeRunner(workspace, fail_at, unexpected_at, workload_exists, malformed_plan)
             created.append(runner)
             return runner
 
@@ -385,6 +393,22 @@ class OperationTraceTests(unittest.TestCase):
         self.assertNotIn("terraform-plan", prework.trace)
         self.assertNotIn("terraform-apply", prework.trace)
         self.assertNotIn("status-cloudfront", prework.trace)
+
+    def test_malformed_plan_is_a_bounded_plan_failure(self) -> None:
+        executor, result, summary, _ = self.run_operation("refresh-plan", malformed_plan=True)
+        self.assertEqual(result, 1)
+        self.assertEqual(summary["source_sha"], resolve_head(ROOT))
+        self.assertEqual(summary["category"], "plan-failed")
+        self.assertEqual(summary["status"], "safe-failure")
+        self.assertEqual(summary["action_counts"], {
+            "create": 0,
+            "update": 0,
+            "delete": 0,
+            "replace": 0,
+            "read": 0,
+            "no-op": 0,
+        })
+        self.assertIn("terraform-show-plan", executor.trace)
 
     def test_failures_stop_at_each_mutation_boundary_and_cleanup(self) -> None:
         cases = (

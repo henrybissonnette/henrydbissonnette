@@ -35,6 +35,7 @@ BOOTSTRAP_TEMPLATE = ROOT / "infra/aws/bootstrap/template.json"
 EXPECTED_TERRAFORM_VERSION = (ROOT / ".terraform-version").read_text(encoding="utf-8").strip()
 EXPECTED_AWS_CLI_VERSION = (ROOT / ".aws-cli-version").read_text(encoding="utf-8").strip()
 OPERATIONS = ("deploy", "plan", "refresh-plan", "site-status")
+REDIRECT_QUERY = (("source", "workflow"), ("empty", ""))
 
 
 class CommandFailure(Exception):
@@ -122,7 +123,7 @@ def redirect_matches(location: str | None, expected_path: str) -> bool:
         and parsed.path == expected_path
         and parsed.fragment == ""
         and Counter(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
-        == Counter((("source", "workflow"), ("empty", "")))
+        == Counter(REDIRECT_QUERY)
     )
 
 
@@ -151,7 +152,8 @@ def verify_public_site(hostname: str, bucket: str, attempts: int = 20, delay_sec
                 "/programming/": "/projects.html",
                 "/design/": "/projects.html",
             }.items():
-                status, headers, _ = http_request(f"https://{hostname}{old}?source=workflow&empty=")
+                query = urllib.parse.urlencode(REDIRECT_QUERY)
+                status, headers, _ = http_request(f"https://{hostname}{old}?{query}")
                 location = headers.get("Location") or headers.get("location")
                 if status != 308 or not redirect_matches(location, new):
                     raise ValueError("edge redirect mismatch")
@@ -425,10 +427,11 @@ class OperationExecutor:
             "plan-failed",
         )
         try:
-            self.plan = private_json(plan_json)
-            action_counts(self.plan)
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            plan = private_json(plan_json)
+            action_counts(plan)
+        except (AttributeError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise OperationFailure("plan-failed", "safe-failure") from exc
+        self.plan = plan
         return plan_file
 
     def output(self, runner: CommandRunner, terraform: str, name: str) -> str:
