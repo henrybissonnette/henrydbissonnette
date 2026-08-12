@@ -98,13 +98,18 @@ facility, or permission to guess a version.
 
 ## Reproducible local checks and deferred evidence
 
-Run `scripts/check_infrastructure.sh` from a fresh checkout. It installs the
-exact Terraform release into ignored `.tools/`, verifies its published digest,
-performs formatting and lockfile checks, initializes without the real backend,
-validates the configuration, runs native mocked plans for both domain phases,
-executes focused ownership/security assertions, and runs the edge fixtures.
-It needs network access to install Terraform and the pinned provider but no AWS
-credentials and it never contacts the real backend.
+Run `scripts/check_infrastructure.sh` from the repository's declared Python
+3.11 workbench. Python installs the exact Terraform and Node releases into
+ignored `.tools/` after checking hard-coded upstream SHA-256 digests; the
+entrypoint does not require ambient `git`, `node`, `curl`, or `unzip` commands.
+It then performs formatting and lockfile checks, initializes without the real
+backend, validates the configuration, runs native mocked plans for both domain
+phases, executes focused ownership/security assertions, and executes the real
+edge-function source in pinned Node. A fresh cache needs network access for the
+two pinned tools and provider, but no AWS credentials, and the check never
+contacts the real backend. `.terraform-version` and `.node-version` are the
+tool-version interface; archive digests for both supported Linux architectures
+are part of `scripts/install_tool.py`.
 
 These local checks do not claim live AWS facts. Task 06 must witness the exact
 deployed template, bucket controls, SNS confirmation, and real main-branch OIDC

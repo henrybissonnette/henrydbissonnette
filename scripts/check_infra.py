@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
+import struct
 import sys
 from pathlib import Path
 from typing import Any
@@ -271,15 +271,40 @@ def check_terraform() -> None:
     require("statusCode: 308" in edge, "edge function: permanent 308 required")
 
 
+def tracked_paths() -> list[Path]:
+    """Read ordinary Git index v2/v3 entries without requiring a Git executable."""
+    dot_git = ROOT / ".git"
+    if dot_git.is_file():
+        pointer = dot_git.read_text(encoding="utf-8").strip()
+        require(pointer.startswith("gitdir: "), "tracked material: malformed .git worktree pointer")
+        git_dir = (ROOT / pointer.removeprefix("gitdir: ")).resolve()
+    else:
+        git_dir = dot_git
+    data = (git_dir / "index").read_bytes()
+    require(len(data) >= 12, "tracked material: Git index is truncated")
+    signature, version, count = struct.unpack_from(">4sII", data)
+    require(signature == b"DIRC", "tracked material: Git index signature is invalid")
+    require(version in {2, 3}, f"tracked material: unsupported Git index version {version}; expected v2 or v3")
+    offset = 12
+    paths: list[Path] = []
+    for entry_number in range(count):
+        entry_start = offset
+        require(offset + 62 <= len(data), f"tracked material: Git index entry {entry_number} is truncated")
+        flags = struct.unpack_from(">H", data, offset + 60)[0]
+        offset += 62
+        if flags & 0x4000:
+            require(offset + 2 <= len(data), f"tracked material: Git index entry {entry_number} flags are truncated")
+            offset += 2
+        path_end = data.find(b"\0", offset)
+        require(path_end >= 0, f"tracked material: Git index entry {entry_number} has no path terminator")
+        paths.append(Path(data[offset:path_end].decode("utf-8", errors="surrogateescape")))
+        entry_size = path_end + 1 - entry_start
+        offset = entry_start + ((entry_size + 7) // 8) * 8
+    return paths
+
+
 def check_tracked_material() -> None:
-    completed = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    paths = [Path(line) for line in completed.stdout.splitlines() if line]
+    paths = tracked_paths()
     forbidden_parts = {".terraform", ".aws-runner"}
     for path in paths:
         name = path.name
@@ -291,13 +316,17 @@ def check_tracked_material() -> None:
         require(not forbidden_terraform_material, f"tracked material: forbidden Terraform material {path}")
         require(not (path.suffix.lower() == ".csv" and "dns" in path.name.lower()), f"tracked material: private DNS export forbidden: {path}")
 
+    ignore = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    for required in (".tools/", "**/.terraform/", "*.tfstate", "*.tfplan", "*.plan.json", "*.tflock", "*.tfdiag"):
+        require(required in ignore, f"tracked material: .gitignore must exclude {required}")
+
 
 def main() -> int:
     try:
         check_bootstrap()
         check_terraform()
         check_tracked_material()
-    except (CheckFailure, json.JSONDecodeError, OSError, subprocess.SubprocessError) as exc:
+    except (CheckFailure, json.JSONDecodeError, OSError, struct.error) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     print("Infrastructure structural checks passed: bootstrap ownership, Terraform boundary, pins, and tracked-material safety.")
