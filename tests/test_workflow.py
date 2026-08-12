@@ -332,8 +332,12 @@ class OperationTraceTests(unittest.TestCase):
         prework, result, summary, _ = self.run_operation("site-status", workload_exists=False)
         self.assertEqual(result, 0)
         self.assertEqual(summary["status"], "success")
+        self.assertEqual(summary["category"], "foundation-ready")
+        self.assertEqual(summary["action_counts"], {"create": 0, "update": 0, "delete": 0, "replace": 0, "read": 0, "no-op": 0})
         self.assertIn("foundation-ready-workload-absent", prework.trace)
         self.assertNotIn("terraform-init", prework.trace)
+        self.assertNotIn("terraform-plan", prework.trace)
+        self.assertNotIn("terraform-apply", prework.trace)
         self.assertNotIn("status-cloudfront", prework.trace)
 
     def test_failures_stop_at_each_mutation_boundary_and_cleanup(self) -> None:

@@ -23,10 +23,15 @@ caller input.
 
 The AWS job installs digest-pinned Terraform 1.15.8 and AWS CLI 2.36.21 before
 requesting credentials, then exchanges the exact-main OIDC identity for the
-bootstrap-owned role. It checks account `241077340022`, region `us-east-1`,
-the exact checkout, and the fixed backend before contacting the real Terraform
-backend. Raw command responses are captured in mode-0600 runner files and are
-never logged or uploaded.
+bootstrap-owned role. Before contacting the Terraform backend it checks account
+`241077340022`, region `us-east-1`, the exact checkout, and the permanent
+CloudFormation foundation: deployed-template equality with that checkout,
+complete owned resources and safe outputs, exact role/OIDC trust and policy,
+state-bucket controls and namespace, and the confirmed budget subscription.
+Editing the bootstrap template therefore intentionally makes every operation
+fail closed until the retained stack has been updated to those reviewed bytes.
+Raw command responses are captured in mode-0600 runner files and are never
+logged or uploaded.
 
 ## Fixed operations
 
@@ -39,9 +44,13 @@ never logged or uploaded.
   It never applies or publishes.
 - `refresh-plan` makes one `-refresh-only` plan. It never invokes any apply
   form, updates state, or publishes.
-- `site-status` reads the fixed named Terraform outputs, CloudFront metadata,
-  origin public-access controls, and the fixed public probes. It does not plan,
-  apply, sync, delete, invalidate, or change cloud configuration.
+- `site-status` first performs the permanent foundation checks above. Before
+  the initial workload exists, an empty fixed state namespace is the successful
+  `foundation-ready` result and the operation stops without backend
+  initialization. Once state exists, it reads the fixed named Terraform
+  outputs, CloudFront metadata, origin public-access controls, and the fixed
+  public probes. It never plans, applies, syncs, deletes, invalidates, or
+  changes cloud configuration.
 
 The public summary contains exactly the source SHA, expected account and
 region, aggregate resource-action counts, one closed diagnostic category, and
@@ -49,7 +58,7 @@ one closed final status. It is newly constructed from those primitives; no raw
 plan, address, value, output, response body, diagnostic, or provider message is
 forwarded. A malformed renderer input becomes one fixed `renderer-failure`.
 The category enum is `none`, `validation-failed`, `identity-failed`,
-`initialization-failed`, `plan-failed`, `apply-uncertain`,
+`foundation-failed`, `foundation-ready`, `initialization-failed`, `plan-failed`, `apply-uncertain`,
 `publication-failed`, `verification-failed`, `status-failed`, or
 `renderer-failure`. Final status is exactly `success`, `safe-failure`, or
 `inspection-required`.

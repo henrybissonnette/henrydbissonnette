@@ -332,7 +332,7 @@ class OperationExecutor:
                 self.checked(
                     runner,
                     "foundation-state-namespace",
-                    [aws, "s3api", "list-objects-v2", "--bucket", EXPECTED_BACKEND_BUCKET, "--prefix", "main/", "--max-keys", "3", "--output", "json", "--no-cli-pager"],
+                    [aws, "s3api", "list-objects-v2", "--bucket", EXPECTED_BACKEND_BUCKET, "--prefix", "main/", "--output", "json", "--no-cli-pager"],
                     "foundation-failed",
                 )
             )
@@ -561,8 +561,11 @@ class OperationExecutor:
                 if not terraform or not aws:
                     raise OperationFailure("validation-failed", "safe-failure")
                 workload_exists = self.preflight(runner, terraform, aws, source_sha)
-                if self.operation == "site-status" and workload_exists:
-                    self.site_status(runner, terraform, aws)
+                if self.operation == "site-status":
+                    if workload_exists:
+                        self.site_status(runner, terraform, aws)
+                    else:
+                        category = "foundation-ready"
                 else:
                     plan_file = self.create_plan(runner, terraform, workspace)
                     if self.operation == "deploy":
