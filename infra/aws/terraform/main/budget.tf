@@ -1,7 +1,3 @@
-data "aws_sns_topic" "budget_notifications" {
-  name = local.budget_topic_name
-}
-
 resource "aws_budgets_budget" "site" {
   name         = "henrybissonnette-monthly-actual-cost"
   budget_type  = "COST"
@@ -14,6 +10,6 @@ resource "aws_budgets_budget" "site" {
     threshold                 = 100
     threshold_type            = "PERCENTAGE"
     notification_type         = "ACTUAL"
-    subscriber_sns_topic_arns = [data.aws_sns_topic.budget_notifications.arn]
+    subscriber_sns_topic_arns = [local.budget_topic_arn]
   }
 }

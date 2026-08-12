@@ -70,6 +70,6 @@ resource "aws_cloudfront_distribution" "site" {
     cloudfront_default_certificate = !var.custom_domain_enabled
     acm_certificate_arn            = var.custom_domain_enabled ? aws_acm_certificate_validation.site[0].certificate_arn : null
     ssl_support_method             = var.custom_domain_enabled ? "sni-only" : null
-    minimum_protocol_version       = var.custom_domain_enabled ? "TLSv1.2_2021" : null
+    minimum_protocol_version       = var.custom_domain_enabled ? "TLSv1.2_2021" : "TLSv1"
   }
 }

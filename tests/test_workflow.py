@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from run_aws_operation import CommandFailure, CommandRunner, OperationExecutor, redirect_matches  # noqa: E402
-from safe_summary import build_summary  # noqa: E402
+from safe_summary import bounded_action_plan, build_summary  # noqa: E402
 from workflow_gate import GateFailure, resolve_head, resolve_operation  # noqa: E402
 
 
@@ -457,6 +457,10 @@ class OperationTraceTests(unittest.TestCase):
             "no-op": 0,
         })
         self.assertIn("terraform-show-plan", executor.trace)
+
+    def test_missing_ordinary_changes_cannot_fabricate_convergence(self) -> None:
+        with self.assertRaises(ValueError):
+            bounded_action_plan({})
 
     def test_malformed_aws_shapes_keep_their_operation_categories(self) -> None:
         _, result, summary, _ = self.run_operation("site-status", malformed_foundation=True)

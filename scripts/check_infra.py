@@ -242,6 +242,7 @@ def check_terraform() -> None:
         "compress               = true",
         'response_page_path    = "/404.html"',
         "cloudfront_default_certificate = !var.custom_domain_enabled",
+        'minimum_protocol_version       = var.custom_domain_enabled ? "TLSv1.2_2021" : "TLSv1"',
     ):
         require(required in cloudfront, f"CloudFront: missing behavior {required}")
     require(cloudfront.count("custom_error_response {") == 2, "CloudFront: exact 403 and 404 mappings required")
@@ -253,7 +254,7 @@ def check_terraform() -> None:
         'limit_unit   = "USD"',
         'time_unit    = "MONTHLY"',
         'notification_type         = "ACTUAL"',
-        "subscriber_sns_topic_arns = [data.aws_sns_topic.budget_notifications.arn]",
+        "subscriber_sns_topic_arns = [local.budget_topic_arn]",
     ):
         require(required in budget, f"budget: missing actual-cost notification boundary {required}")
 

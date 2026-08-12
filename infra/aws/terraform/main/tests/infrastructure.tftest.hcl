@@ -57,6 +57,11 @@ run "staging_increment" {
     condition     = aws_cloudfront_distribution.site.viewer_certificate[0].cloudfront_default_certificate
     error_message = "staging must use the CloudFront default certificate"
   }
+
+  assert {
+    condition     = aws_cloudfront_distribution.site.viewer_certificate[0].minimum_protocol_version == "TLSv1"
+    error_message = "the CloudFront default certificate must declare its provider-normalized protocol value"
+  }
 }
 
 run "custom_domain_increment" {
@@ -89,5 +94,10 @@ run "custom_domain_increment" {
   assert {
     condition     = !aws_cloudfront_distribution.site.viewer_certificate[0].cloudfront_default_certificate
     error_message = "custom-domain increment must replace the default viewer certificate"
+  }
+
+  assert {
+    condition     = aws_cloudfront_distribution.site.viewer_certificate[0].minimum_protocol_version == "TLSv1.2_2021"
+    error_message = "custom-domain HTTPS must use the approved modern TLS policy"
   }
 }
