@@ -152,7 +152,7 @@
               }
             },
             {
-              "Sid": "AllowApplyRoleBucketInspection",
+              "Sid": "AllowApplyRoleBucketLocation",
               "Effect": "Allow",
               "Principal": {
                 "AWS": {
@@ -162,10 +162,26 @@
                   ]
                 }
               },
-              "Action": [
-                "s3:GetBucketLocation",
-                "s3:ListBucket"
-              ],
+              "Action": "s3:GetBucketLocation",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TerraformStateBucket",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Sid": "AllowApplyRoleBucketList",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "GitHubApplyRole",
+                    "Arn"
+                  ]
+                }
+              },
+              "Action": "s3:ListBucket",
               "Resource": {
                 "Fn::GetAtt": [
                   "TerraformStateBucket",

@@ -126,6 +126,16 @@ def check_bootstrap() -> None:
     policy = policy_resource["Properties"]["PolicyDocument"]
     tls = statement(policy, "DenyInsecureTransport")
     require(tls.get("Effect") == "Deny" and tls.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}, "DenyInsecureTransport: exact non-TLS denial required")
+    location = statement(policy, "AllowApplyRoleBucketLocation")
+    require(location.get("Action") == "s3:GetBucketLocation", "bucket location: exact action required")
+    require("Condition" not in location, "bucket location: s3:prefix does not apply to GetBucketLocation")
+    bucket_list = statement(policy, "AllowApplyRoleBucketList")
+    require(bucket_list.get("Action") == "s3:ListBucket", "bucket list: exact action required")
+    require(
+        bucket_list.get("Condition")
+        == {"StringLike": {"s3:prefix": ["main/terraform.tfstate", "main/terraform.tfstate.tflock"]}},
+        "bucket list: fixed state-key prefixes required",
+    )
     state_access = statement(policy, "AllowApplyRoleStateReadWrite")
     require(set(state_access.get("Action", [])) == {"s3:GetObject", "s3:PutObject"}, "state object: normal access must not include deletion")
     require(state_access.get("Resource") == {"Fn::Sub": "${TerraformStateBucket.Arn}/main/terraform.tfstate"}, "state object: fixed key required")
