@@ -109,7 +109,11 @@ edge-function source in pinned Node. A fresh cache needs network access for the
 two pinned tools and provider, but no AWS credentials, and the check never
 contacts the real backend. `.terraform-version` and `.node-version` are the
 tool-version interface; archive digests for both supported Linux architectures
-are part of `scripts/install_tool.py`.
+are part of `scripts/install_tool.py`. This cold authoring cache grows with the
+number of distinct tool-version pins used in one worktree: one executable per
+Terraform or Node version. It is ignored, is never a runtime dependency, and
+may be deleted as a unit; the next check reconstructs only the two current
+pins.
 
 These local checks do not claim live AWS facts. Task 06 must witness the exact
 deployed template, bucket controls, SNS confirmation, and real main-branch OIDC
@@ -127,7 +131,7 @@ state writes times state size. Both stores intentionally retain noncurrent
 versions at this initial scale. Material observed version growth is the trigger
 for a separately reviewed lifecycle policy.
 
-There is no recurring inventory scan, drift poll, project-owned cache, VPC,
-database, queue, runtime, second account, legacy import, App Engine migration,
-DNSSEC configuration, automatic shutdown, generalized redirect engine, or
-future-workload scaffold in this boundary.
+There is no recurring inventory scan, drift poll, project-owned production
+cache, VPC, database, queue, runtime, second account, legacy import, App Engine
+migration, DNSSEC configuration, automatic shutdown, generalized redirect
+engine, or future-workload scaffold in this boundary.
