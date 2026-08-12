@@ -49,11 +49,17 @@ def public_endpoints(value: dict[str, Any] | None) -> dict[str, Any]:
     return {"staging_hostname": hostname, "authoritative_name_servers": sorted(name_servers)}
 
 
-def action_counts(plan: dict[str, Any] | None, collection: str = "resource_changes") -> dict[str, int]:
+def action_counts(
+    plan: dict[str, Any] | None,
+    collection: str = "resource_changes",
+    absent_is_empty: bool = False,
+) -> dict[str, int]:
     counts = dict(ZERO_COUNTS)
     if plan is None:
         return counts
     changes = plan.get(collection)
+    if changes is None and absent_is_empty:
+        return counts
     if not isinstance(changes, list):
         raise ValueError(f"{collection} must be a list")
     for resource in changes:
@@ -83,13 +89,18 @@ def action_counts(plan: dict[str, Any] | None, collection: str = "resource_chang
     return counts
 
 
-def bounded_action_plan(plan: dict[str, Any], collection: str = "resource_changes") -> dict[str, Any]:
+def bounded_action_plan(
+    plan: dict[str, Any],
+    collection: str = "resource_changes",
+    absent_is_empty: bool = False,
+) -> dict[str, Any]:
     """Validate one Terraform action collection and retain no resource values."""
-    action_counts(plan, collection)
+    action_counts(plan, collection, absent_is_empty)
+    changes = plan.get(collection, []) if absent_is_empty else plan[collection]
     return {
         "resource_changes": [
             {"change": {"actions": list(resource["change"]["actions"])}}
-            for resource in plan[collection]
+            for resource in changes
         ]
     }
 

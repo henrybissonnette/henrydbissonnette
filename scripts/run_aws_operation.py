@@ -429,7 +429,11 @@ class OperationExecutor:
         try:
             plan = private_json(plan_json)
             collection = "resource_drift" if self.operation == "refresh-plan" else "resource_changes"
-            bounded_plan = bounded_action_plan(plan, collection)
+            bounded_plan = bounded_action_plan(
+                plan,
+                collection,
+                absent_is_empty=self.operation == "refresh-plan",
+            )
         except (AttributeError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise OperationFailure("plan-failed", "safe-failure") from exc
         self.plan = bounded_plan

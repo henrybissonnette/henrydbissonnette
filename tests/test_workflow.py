@@ -160,7 +160,9 @@ class SafeSummaryTests(unittest.TestCase):
     def test_malformed_input_returns_one_fixed_safe_failure(self) -> None:
         first = build_summary("not-a-sha", "anything", "success", {"raw": "SECRET"})
         second = build_summary("e" * 40, "none", "success", {"resource_changes": "hostile"})
+        absent_changes = build_summary("e" * 40, "none", "success", {})
         self.assertEqual(first, second)
+        self.assertEqual(absent_changes, first)
         self.assertEqual(first["category"], "renderer-failure")
         self.assertEqual(first["status"], "safe-failure")
         self.assertNotIn("SECRET", json.dumps(first))
@@ -201,6 +203,7 @@ class FakeRunner(CommandRunner):
         malformed_plan: bool = False,
         malformed_foundation: bool = False,
         malformed_invalidation: bool = False,
+        no_drift: bool = False,
     ):
         super().__init__(workspace)
         self.fail_at = fail_at
@@ -209,6 +212,7 @@ class FakeRunner(CommandRunner):
         self.malformed_plan = malformed_plan
         self.malformed_foundation = malformed_foundation
         self.malformed_invalidation = malformed_invalidation
+        self.no_drift = no_drift
         self.refresh_plan = False
         self.commands: list[list[str]] = []
         self.commands_by_label: dict[str, list[str]] = {}
@@ -249,20 +253,20 @@ class FakeRunner(CommandRunner):
             "foundation-subscription": json.dumps({"Subscriptions": [{"Protocol": "email", "SubscriptionArn": "SENTINEL_PRIVATE_SUBSCRIPTION_ARN"}]}),
             "foundation-state-namespace": json.dumps({"Contents": [{"Key": "main/terraform.tfstate"}]} if self.workload_exists else {"KeyCount": 0}),
             "terraform-show-plan": json.dumps({
-                "resource_changes": [{
+                **({} if self.refresh_plan else {"resource_changes": [{
                     "address": "SENTINEL_PRIVATE_ADDRESS",
-                    "change": None if self.refresh_plan else {
+                    "change": {
                         "actions": ["update"],
                         "before": {"secret": "SENTINEL"},
                     },
-                }],
-                "resource_drift": [{
+                }]}),
+                **({} if self.no_drift else {"resource_drift": [{
                     "address": "SENTINEL_PRIVATE_DRIFT_ADDRESS",
                     "change": None if self.malformed_plan else {
                         "actions": ["update"],
                         "before": {"secret": "SENTINEL"},
                     },
-                }],
+                }]}),
             }),
             "terraform-output-content_bucket_name": "henry-content-bucket\n",
             "terraform-output-cloudfront_distribution_id": "EDIST123\n",
@@ -304,6 +308,7 @@ class OperationTraceTests(unittest.TestCase):
         malformed_plan: bool = False,
         malformed_foundation: bool = False,
         malformed_invalidation: bool = False,
+        no_drift: bool = False,
     ) -> tuple[OperationExecutor, int, dict, FakeRunner]:
         outer = tempfile.TemporaryDirectory()
         self.addCleanup(outer.cleanup)
@@ -320,6 +325,7 @@ class OperationTraceTests(unittest.TestCase):
                 malformed_plan,
                 malformed_foundation,
                 malformed_invalidation,
+                no_drift,
             )
             created.append(runner)
             return runner
@@ -403,6 +409,19 @@ class OperationTraceTests(unittest.TestCase):
         plan_command = refresh_runner.commands_by_label["terraform-plan"]
         self.assertIn("-refresh-only", plan_command)
         self.assertFalse(any("apply" in command for command in refresh_runner.commands))
+
+        no_drift, result, no_drift_summary, _ = self.run_operation("refresh-plan", no_drift=True)
+        self.assertEqual(result, 0)
+        self.assertEqual(no_drift_summary["status"], "success")
+        self.assertEqual(no_drift_summary["action_counts"], {
+            "create": 0,
+            "update": 0,
+            "delete": 0,
+            "replace": 0,
+            "read": 0,
+            "no-op": 0,
+        })
+        self.assertNotIn("terraform-apply", no_drift.trace)
 
         status, result, _, _ = self.run_operation("site-status")
         self.assertEqual(result, 0)
