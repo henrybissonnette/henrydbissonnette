@@ -271,8 +271,9 @@ class OperationTraceTests(unittest.TestCase):
         self.assertEqual(apply_command[-1], plan_path)
         upload_command = runner.commands[runner.trace.index("site-upload")]
         reconcile_command = runner.commands[runner.trace.index("site-reconcile")]
-        self.assertIn("--no-delete", upload_command)
+        # aws s3 sync deletes only when asked; the CLI has no --no-delete option.
         self.assertNotIn("--delete", upload_command)
+        self.assertNotIn("--no-delete", upload_command)
         self.assertIn("--delete", reconcile_command)
         invalidation_command = runner.commands[runner.trace.index("cloudfront-invalidate")]
         self.assertEqual(invalidation_command[invalidation_command.index("--paths") + 1], "/*")

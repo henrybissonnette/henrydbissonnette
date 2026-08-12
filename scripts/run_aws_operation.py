@@ -289,7 +289,7 @@ class OperationExecutor:
         self.checked(
             runner,
             "site-upload",
-            [aws, "s3", "sync", str(SITE_ROOT), f"s3://{bucket}", "--no-delete", "--only-show-errors", "--no-cli-pager"],
+            [aws, "s3", "sync", str(SITE_ROOT), f"s3://{bucket}", "--only-show-errors", "--no-cli-pager"],
             "publication-failed",
             "inspection-required",
         )
