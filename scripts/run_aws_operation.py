@@ -18,7 +18,7 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Iterable
 
-from safe_summary import EXPECTED_ACCOUNT, EXPECTED_REGION, action_counts, append_summary
+from safe_summary import EXPECTED_ACCOUNT, EXPECTED_REGION, append_summary, bounded_action_plan
 from workflow_gate import MAIN_REF, resolve_head
 
 
@@ -360,7 +360,7 @@ class OperationExecutor:
                 raise ValueError("state namespace contains an unexpected key")
             runner.trace.append("foundation-verified")
             return EXPECTED_BACKEND_KEY in keys
-        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        except (AttributeError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise OperationFailure("foundation-failed", "safe-failure") from exc
 
     def preflight(self, runner: CommandRunner, terraform: str, aws: str, sha: str) -> bool:
@@ -428,10 +428,11 @@ class OperationExecutor:
         )
         try:
             plan = private_json(plan_json)
-            action_counts(plan)
+            collection = "resource_drift" if self.operation == "refresh-plan" else "resource_changes"
+            bounded_plan = bounded_action_plan(plan, collection)
         except (AttributeError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise OperationFailure("plan-failed", "safe-failure") from exc
-        self.plan = plan
+        self.plan = bounded_plan
         return plan_file
 
     def output(self, runner: CommandRunner, terraform: str, name: str) -> str:
@@ -532,9 +533,9 @@ class OperationExecutor:
                     "inspection-required",
                 )
             )
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            invalidation_id = invalidation.get("Invalidation", {}).get("Id")
+        except (AttributeError, OSError, ValueError, json.JSONDecodeError) as exc:
             raise OperationFailure("publication-failed", "inspection-required") from exc
-        invalidation_id = invalidation.get("Invalidation", {}).get("Id")
         if not isinstance(invalidation_id, str) or re.fullmatch(r"[A-Z0-9]+", invalidation_id) is None:
             raise OperationFailure("publication-failed", "inspection-required")
         self.checked(

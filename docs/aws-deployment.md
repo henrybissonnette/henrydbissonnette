@@ -42,7 +42,9 @@ logged or uploaded.
   and direct-S3-denial probes.
 - `plan` makes one ordinary saved plan for a bounded aggregate action summary.
   It never applies or publishes.
-- `refresh-plan` makes one `-refresh-only` plan. It never invokes any apply
+- `refresh-plan` makes one `-refresh-only` plan and reports actions from
+  Terraform's `resource_drift` collection rather than the ordinary desired-state
+  `resource_changes` collection. It never invokes any apply
   form, updates state, or publishes.
 - `site-status` first performs the permanent foundation checks above. Before
   the initial workload exists, an empty fixed state namespace is the successful

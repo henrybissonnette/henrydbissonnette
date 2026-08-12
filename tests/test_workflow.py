@@ -199,16 +199,23 @@ class FakeRunner(CommandRunner):
         unexpected_at: str | None = None,
         workload_exists: bool = True,
         malformed_plan: bool = False,
+        malformed_foundation: bool = False,
+        malformed_invalidation: bool = False,
     ):
         super().__init__(workspace)
         self.fail_at = fail_at
         self.unexpected_at = unexpected_at
         self.workload_exists = workload_exists
         self.malformed_plan = malformed_plan
+        self.malformed_foundation = malformed_foundation
+        self.malformed_invalidation = malformed_invalidation
+        self.refresh_plan = False
         self.commands: list[list[str]] = []
         self.commands_by_label: dict[str, list[str]] = {}
 
     def run(self, label: str, command: list[str], allowed=(0,)) -> Path:
+        if label == "terraform-plan":
+            self.refresh_plan = "-refresh-only" in command
         self.trace.append(label)
         self.commands.append(command)
         self.commands_by_label[label] = command
@@ -217,7 +224,8 @@ class FakeRunner(CommandRunner):
             "terraform-version": "Terraform v1.15.8\n",
             "aws-version": "aws-cli/2.36.21 Python/3.13 Linux/x86_64\n",
             "sts-identity": json.dumps({"Account": "241077340022", "Arn": "SENTINEL_PRIVATE_ARN"}),
-            "foundation-stack": json.dumps({"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": [
+            "foundation-stack": json.dumps({"Stacks": ["malformed"] if self.malformed_foundation else [{
+                "StackStatus": "UPDATE_COMPLETE", "Outputs": [
                 {"OutputKey": "AccountId", "OutputValue": "241077340022"},
                 {"OutputKey": "ApplyRoleArn", "OutputValue": "arn:aws:iam::241077340022:role/henrybissonnette-github-apply"},
                 {"OutputKey": "StateBucketName", "OutputValue": "henrybissonnette-terraform-state-241077340022"},
@@ -243,11 +251,18 @@ class FakeRunner(CommandRunner):
             "terraform-show-plan": json.dumps({
                 "resource_changes": [{
                     "address": "SENTINEL_PRIVATE_ADDRESS",
+                    "change": None if self.refresh_plan else {
+                        "actions": ["update"],
+                        "before": {"secret": "SENTINEL"},
+                    },
+                }],
+                "resource_drift": [{
+                    "address": "SENTINEL_PRIVATE_DRIFT_ADDRESS",
                     "change": None if self.malformed_plan else {
                         "actions": ["update"],
                         "before": {"secret": "SENTINEL"},
                     },
-                }]
+                }],
             }),
             "terraform-output-content_bucket_name": "henry-content-bucket\n",
             "terraform-output-cloudfront_distribution_id": "EDIST123\n",
@@ -258,7 +273,10 @@ class FakeRunner(CommandRunner):
                 "ns-3.awsdns-3.org",
                 "ns-4.awsdns-4.co.uk",
             ]),
-            "cloudfront-invalidate": json.dumps({"Invalidation": {"Id": "INV123"}}),
+            "cloudfront-invalidate": json.dumps(
+                {"Invalidation": "malformed"}
+                if self.malformed_invalidation else {"Invalidation": {"Id": "INV123"}}
+            ),
         }
         descriptor = os.open(capture, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -284,6 +302,8 @@ class OperationTraceTests(unittest.TestCase):
         unexpected_at: str | None = None,
         workload_exists: bool = True,
         malformed_plan: bool = False,
+        malformed_foundation: bool = False,
+        malformed_invalidation: bool = False,
     ) -> tuple[OperationExecutor, int, dict, FakeRunner]:
         outer = tempfile.TemporaryDirectory()
         self.addCleanup(outer.cleanup)
@@ -292,7 +312,15 @@ class OperationTraceTests(unittest.TestCase):
         created: list[FakeRunner] = []
 
         def factory(workspace: Path) -> FakeRunner:
-            runner = FakeRunner(workspace, fail_at, unexpected_at, workload_exists, malformed_plan)
+            runner = FakeRunner(
+                workspace,
+                fail_at,
+                unexpected_at,
+                workload_exists,
+                malformed_plan,
+                malformed_foundation,
+                malformed_invalidation,
+            )
             created.append(runner)
             return runner
 
@@ -369,8 +397,9 @@ class OperationTraceTests(unittest.TestCase):
         self.assertNotIn("terraform-apply", plan.trace)
         self.assertNotIn("site-upload", plan.trace)
 
-        refresh, result, _, refresh_runner = self.run_operation("refresh-plan")
+        refresh, result, refresh_summary, refresh_runner = self.run_operation("refresh-plan")
         self.assertEqual(result, 0)
+        self.assertEqual(refresh_summary["action_counts"]["update"], 1)
         plan_command = refresh_runner.commands_by_label["terraform-plan"]
         self.assertIn("-refresh-only", plan_command)
         self.assertFalse(any("apply" in command for command in refresh_runner.commands))
@@ -409,6 +438,16 @@ class OperationTraceTests(unittest.TestCase):
             "no-op": 0,
         })
         self.assertIn("terraform-show-plan", executor.trace)
+
+    def test_malformed_aws_shapes_keep_their_operation_categories(self) -> None:
+        _, result, summary, _ = self.run_operation("site-status", malformed_foundation=True)
+        self.assertEqual(result, 1)
+        self.assertEqual(summary["category"], "foundation-failed")
+
+        _, result, summary, _ = self.run_operation("deploy", malformed_invalidation=True)
+        self.assertEqual(result, 1)
+        self.assertEqual(summary["category"], "publication-failed")
+        self.assertEqual(summary["status"], "inspection-required")
 
     def test_failures_stop_at_each_mutation_boundary_and_cleanup(self) -> None:
         cases = (

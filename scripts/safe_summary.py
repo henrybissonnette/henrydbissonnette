@@ -49,13 +49,13 @@ def public_endpoints(value: dict[str, Any] | None) -> dict[str, Any]:
     return {"staging_hostname": hostname, "authoritative_name_servers": sorted(name_servers)}
 
 
-def action_counts(plan: dict[str, Any] | None) -> dict[str, int]:
+def action_counts(plan: dict[str, Any] | None, collection: str = "resource_changes") -> dict[str, int]:
     counts = dict(ZERO_COUNTS)
     if plan is None:
         return counts
-    changes = plan.get("resource_changes")
+    changes = plan.get(collection)
     if not isinstance(changes, list):
-        raise ValueError("resource_changes must be a list")
+        raise ValueError(f"{collection} must be a list")
     for resource in changes:
         if not isinstance(resource, dict):
             raise ValueError("resource change must be an object")
@@ -81,6 +81,17 @@ def action_counts(plan: dict[str, Any] | None) -> dict[str, int]:
         else:
             raise ValueError("unsupported resource action shape")
     return counts
+
+
+def bounded_action_plan(plan: dict[str, Any], collection: str = "resource_changes") -> dict[str, Any]:
+    """Validate one Terraform action collection and retain no resource values."""
+    action_counts(plan, collection)
+    return {
+        "resource_changes": [
+            {"change": {"actions": list(resource["change"]["actions"])}}
+            for resource in plan[collection]
+        ]
+    }
 
 
 def fixed_renderer_failure() -> dict[str, Any]:
