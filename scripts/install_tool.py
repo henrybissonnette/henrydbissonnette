@@ -26,6 +26,10 @@ NODE_SHA256 = {
     "amd64": "e798599612f4bb71333a3397ab0d095fd62214e115aea45aa858a145fc72d67e",
     "arm64": "aa881151bd0f9f154a0424dd60a72e9ce10672619121658c278a24327ef46831",
 }
+NODE_ARCHIVE_ARCH = {
+    "amd64": "x64",
+    "arm64": "arm64",
+}
 
 
 class InstallFailure(Exception):
@@ -83,12 +87,13 @@ def install_terraform(version: str, arch: str, destination: Path) -> None:
 
 
 def install_node(version: str, arch: str, destination: Path) -> None:
-    archive = f"node-v{version}-linux-{arch}.tar.xz"
+    archive_arch = NODE_ARCHIVE_ARCH[arch]
+    archive = f"node-v{version}-linux-{archive_arch}.tar.xz"
     payload = download(
         f"https://nodejs.org/download/release/v{version}/{archive}",
         NODE_SHA256[arch],
     )
-    member = f"node-v{version}-linux-{arch}/bin/node"
+    member = f"node-v{version}-linux-{archive_arch}/bin/node"
     try:
         with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
             extracted = tar.extractfile(member)
