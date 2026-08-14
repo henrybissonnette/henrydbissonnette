@@ -52,7 +52,7 @@
     </g>
   </g>
 
-  <g stroke-linecap="round" opacity=".72">
+  <g fill="none" stroke-linecap="round" opacity=".72">
     <g stroke="#e83c27" stroke-width="1.4">
       <path d="M239 261l60 31 43-14 51 47 48-9 57 54 46 4 54 48 46 14"/>
       <path d="M298 292l15 52 48 15 32-34 18 70 47-24 30 62 50-33 19 65"/>

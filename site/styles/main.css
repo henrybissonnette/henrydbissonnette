@@ -27,6 +27,7 @@
 }
 
 html {
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
@@ -66,6 +67,10 @@ img {
 .site-footer,
 main {
   padding-inline: var(--page-gutter);
+}
+
+main {
+  overflow: hidden;
 }
 
 .site-header {
@@ -268,16 +273,21 @@ h1 {
 
 .hero-art {
   position: absolute;
-  right: 50%;
+  left: 50%;
   bottom: 0;
   z-index: 1;
-  width: max(100vw, 78rem);
-  transform: translateX(50%);
+  width: 100vw;
+  height: clamp(24rem, 43.75vw, 44rem);
+  overflow: hidden;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
 .hero-art img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
 }
 
 .page-shell {
@@ -514,10 +524,6 @@ h1 {
   .hero-copy {
     width: min(100%, 37rem);
     padding-block: 3.75rem clamp(20rem, 75vw, 29rem);
-  }
-
-  .hero-art {
-    width: max(62rem, 155vw);
   }
 
   .page-intro,
