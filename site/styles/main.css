@@ -108,6 +108,9 @@ main {
 }
 
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--ink);
   font-size: clamp(1.15rem, 2.5vw, 1.55rem);
   font-weight: 900;
@@ -426,6 +429,9 @@ h1 {
 }
 
 .contact-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   overflow-wrap: anywhere;
   font-family: var(--font-editorial);
   font-size: clamp(1.15rem, 2.6vw, 1.55rem);
@@ -517,6 +523,9 @@ h1 {
 }
 
 .footer-shell a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--footer-text);
 }
 
