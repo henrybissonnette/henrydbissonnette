@@ -41,7 +41,7 @@ class CheckSiteTests(unittest.TestCase):
         temporary, site = self.copy_site()
         self.addCleanup(temporary.cleanup)
         page = site / "index.html"
-        page.write_text(page.read_text(encoding="utf-8").replace(' alt="An abstract engineering workbench made from geometric tools and pathways"', ""), encoding="utf-8")
+        page.write_text(page.read_text(encoding="utf-8").replace(' alt=""', "", 1), encoding="utf-8")
 
         errors = validate_site(site)
 
@@ -78,13 +78,39 @@ class CheckSiteTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         page = site / "index.html"
         page.write_text(
-            page.read_text(encoding="utf-8").replace("images/workbench.svg", "https://cdn.example/workbench.svg"),
+            page.read_text(encoding="utf-8").replace("images/morphogenesis.svg", "https://cdn.example/morphogenesis.svg"),
             encoding="utf-8",
         )
 
         errors = validate_site(site)
 
         self.assertTrue(any("external asset dependency" in error for error in errors), errors)
+
+    def test_missing_navigation_dot_reports_page(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "about.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace('class="nav-dot nav-dot-about"', 'class="nav-dot-about"'),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(any("site/about.html" in error and "navigation dots" in error for error in errors), errors)
+
+    def test_changed_topic_sequence_reports_page(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "404.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace('data-topic="PHILOSOPHY"', 'data-topic="THOUGHT"'),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(any("site/404.html" in error and "canonical sequence" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

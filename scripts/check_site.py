@@ -12,9 +12,10 @@ from urllib.parse import unquote, urlsplit
 
 
 REQUIRED_PAGES = ("index.html", "about.html", "projects.html", "contact.html", "404.html")
-REQUIRED_ASSETS = ("styles/main.css", "images/favicon.svg", "images/workbench.svg")
+REQUIRED_ASSETS = ("styles/main.css", "images/favicon.svg", "images/morphogenesis.svg")
 LANDMARKS = ("header", "nav", "main", "footer")
 APEX = "https://henrybissonnette.com"
+TOPICS = ("AI", "COMPUTATION", "LIFE", "PHILOSOPHY", "LEARNING")
 
 
 @dataclass
@@ -125,6 +126,37 @@ def validate_site(site_root: Path) -> list[str]:
         for landmark in LANDMARKS:
             if len(document.attrs.get(landmark, [])) != 1:
                 errors.append(f"site/{relative}: expected exactly one <{landmark}> landmark")
+
+        nav_dots = [
+            attrs
+            for attrs in document.attrs.get("span", [])
+            if "nav-dot" in (attrs.get("class") or "").split()
+        ]
+        if len(nav_dots) != 3 or any(attrs.get("aria-hidden") != "true" for attrs in nav_dots):
+            errors.append(
+                f"site/{relative}: expected three aria-hidden navigation dots; found {len(nav_dots)}"
+            )
+
+        topic_bands = [
+            attrs
+            for attrs in document.attrs.get("div", [])
+            if "topic-band" in (attrs.get("class") or "").split()
+        ]
+        topic_words = [
+            attrs
+            for attrs in document.attrs.get("span", [])
+            if "topic-word" in (attrs.get("class") or "").split()
+        ]
+        if (
+            len(topic_bands) != 1
+            or topic_bands[0].get("role") != "group"
+            or topic_bands[0].get("aria-label") != "Topics"
+        ):
+            errors.append(f"site/{relative}: expected one topic band labelled Topics")
+        if [attrs.get("data-topic") for attrs in topic_words] != list(TOPICS):
+            errors.append(
+                f"site/{relative}: topic band must contain the canonical sequence {' • '.join(TOPICS)}"
+            )
 
         h1s = [text for level, text in document.headings if level == 1 and text]
         if len(h1s) != 1:

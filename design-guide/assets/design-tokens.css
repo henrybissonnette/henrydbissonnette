@@ -1,0 +1,62 @@
+/*
+ * Provisional Chromatic Morphogenesis tokens.
+ * Tune against coded browser renders; generated-image color is not a color spec.
+ */
+
+:root {
+  color-scheme: light;
+
+  --color-ground: #f7dcc3;
+  --color-ground-light: #fde9d6;
+  --color-ink: #090909;
+  --color-ink-soft: #302a27;
+  --color-rule: #b8a28f;
+
+  --color-coral: #f04c36;
+  --color-vermilion: #e83c27;
+  --color-orange: #ef7d45;
+  --color-gold: #e5aa16;
+  --color-moss: #687124;
+  --color-violet: #7026b8;
+  --color-cobalt: #2f3fc2;
+  --color-blue: #176acb;
+  --color-turquoise: #1b9fa5;
+
+  --color-footer: #050505;
+  --color-footer-text: #f7dcc3;
+
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-editorial: "Newsreader", Georgia, serif;
+  --font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  --measure-reading: 68ch;
+  --page-gutter: clamp(1.25rem, 4vw, 5rem);
+  --display-size: clamp(3.5rem, 8vw, 9rem);
+  --title-size: clamp(2.5rem, 5.5vw, 6rem);
+  --body-size: clamp(1.0625rem, 1.2vw, 1.25rem);
+
+  --rule-width: 1px;
+  --focus-width: 3px;
+  --focus-offset: 4px;
+  --motion-slow: 18s;
+  --motion-medium: 480ms;
+  --motion-fast: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-slow: 1ms;
+    --motion-medium: 1ms;
+    --motion-fast: 1ms;
+  }
+}

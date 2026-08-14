@@ -14,15 +14,15 @@
     <nav class="nav-shell" aria-label="Primary navigation">
       <a class="wordmark" href="index.html" aria-current="page">Henry Bissonnette</a>
       <ul class="nav-list">
-        <li><a href="about.html">About</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html"><span class="nav-dot nav-dot-about" aria-hidden="true"></span>About</a></li>
+        <li><a href="projects.html"><span class="nav-dot nav-dot-projects" aria-hidden="true"></span>Projects</a></li>
+        <li><a href="contact.html"><span class="nav-dot nav-dot-contact" aria-hidden="true"></span>Contact</a></li>
       </ul>
     </nav>
   </header>
   <main>
     <section class="hero" aria-labelledby="hero-title">
-      <div>
+      <div class="hero-copy">
         <p class="eyebrow">Engineer · maker · curious human</p>
         <h1 id="hero-title">Building useful things with care.</h1>
         <p class="lede">I’m Henry. I like turning unruly ideas into clear, durable software—and leaving room for the next good question.</p>
@@ -31,12 +31,19 @@
           <a class="button button-secondary" href="about.html">A little about me</a>
         </div>
       </div>
-      <div class="hero-art">
-        <img src="images/workbench.svg" alt="An abstract engineering workbench made from geometric tools and pathways">
+      <div class="hero-art" aria-hidden="true">
+        <img src="images/morphogenesis.svg" alt="" aria-hidden="true">
       </div>
     </section>
   </main>
   <footer class="site-footer">
+    <div class="topic-band" role="group" aria-label="Topics">
+      <span class="topic-word" data-topic="AI">AI</span>
+      <span class="topic-word" data-topic="COMPUTATION">COMPUTATION</span>
+      <span class="topic-word" data-topic="LIFE">LIFE</span>
+      <span class="topic-word" data-topic="PHILOSOPHY">PHILOSOPHY</span>
+      <span class="topic-word" data-topic="LEARNING">LEARNING</span>
+    </div>
     <div class="footer-shell">
       <p>Made thoughtfully by Henry Bissonnette.</p>
       <p><a href="contact.html">Start a conversation</a></p>

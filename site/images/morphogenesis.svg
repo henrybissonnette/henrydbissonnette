@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" role="presentation">
+  <defs>
+    <radialGradient id="coralField" cx="35%" cy="65%" r="75%">
+      <stop offset="0" stop-color="#d61f24"/>
+      <stop offset=".55" stop-color="#f04c36"/>
+      <stop offset="1" stop-color="#ef7d45"/>
+    </radialGradient>
+    <radialGradient id="blueField" cx="72%" cy="68%" r="75%">
+      <stop offset="0" stop-color="#12278d"/>
+      <stop offset=".55" stop-color="#3b1b91"/>
+      <stop offset="1" stop-color="#176acb"/>
+    </radialGradient>
+    <pattern id="coralCells" width="92" height="80" patternUnits="userSpaceOnUse">
+      <circle cx="22" cy="28" r="19" fill="none" stroke="#ffd0a9" stroke-width="3"/>
+      <circle cx="67" cy="16" r="13" fill="none" stroke="#ffb287" stroke-width="2.5"/>
+      <circle cx="60" cy="60" r="24" fill="none" stroke="#ffc69c" stroke-width="3"/>
+      <circle cx="21" cy="28" r="4" fill="#ff9d64"/>
+      <circle cx="60" cy="60" r="5" fill="#df2d2b"/>
+    </pattern>
+    <pattern id="blueCells" width="94" height="82" patternUnits="userSpaceOnUse">
+      <circle cx="25" cy="29" r="20" fill="none" stroke="#8672e6" stroke-width="3"/>
+      <circle cx="71" cy="17" r="14" fill="none" stroke="#594ed0" stroke-width="2.5"/>
+      <circle cx="63" cy="62" r="25" fill="none" stroke="#5e5bdf" stroke-width="3"/>
+      <circle cx="25" cy="29" r="4" fill="#a648e4"/>
+      <circle cx="63" cy="62" r="5" fill="#1354d1"/>
+    </pattern>
+    <clipPath id="leftTerritory">
+      <path d="M0 132C119 180 139 284 284 333c130 44 225 58 327 172 58 65 95 126 194 195H0Z"/>
+    </clipPath>
+    <clipPath id="rightTerritory">
+      <path d="M1600 98c-142 46-157 158-298 205-134 45-235 58-327 176-64 82-87 154-180 221h805Z"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#leftTerritory)">
+    <rect width="820" height="700" fill="url(#coralField)"/>
+    <rect width="820" height="700" fill="url(#coralCells)" opacity=".8"/>
+    <g fill="none" stroke="#7b1728" stroke-width="2" opacity=".5">
+      <circle cx="72" cy="596" r="78"/><circle cx="177" cy="647" r="47"/>
+      <circle cx="262" cy="566" r="61"/><circle cx="393" cy="646" r="73"/>
+      <circle cx="508" cy="596" r="45"/>
+    </g>
+  </g>
+
+  <g clip-path="url(#rightTerritory)">
+    <rect x="780" width="820" height="700" fill="url(#blueField)"/>
+    <rect x="780" width="820" height="700" fill="url(#blueCells)" opacity=".78"/>
+    <g fill="none" stroke="#100b56" stroke-width="2" opacity=".6">
+      <circle cx="1514" cy="607" r="86"/><circle cx="1401" cy="651" r="52"/>
+      <circle cx="1294" cy="577" r="66"/><circle cx="1164" cy="646" r="78"/>
+      <circle cx="1043" cy="592" r="44"/>
+    </g>
+  </g>
+
+  <g stroke-linecap="round" opacity=".72">
+    <g stroke="#e83c27" stroke-width="1.4">
+      <path d="M239 261l60 31 43-14 51 47 48-9 57 54 46 4 54 48 46 14"/>
+      <path d="M298 292l15 52 48 15 32-34 18 70 47-24 30 62 50-33 19 65"/>
+      <path d="M342 278l19 81 80-43 17 55 86 3-6 26 66 36"/>
+    </g>
+    <g stroke="#7026b8" stroke-width="1.4">
+      <path d="M1364 238l-62 39-44-10-50 51-49-2-53 59-47 8-50 53-48 18"/>
+      <path d="M1302 277l-12 53-48 20-34-32-14 71-48-20-27 64-52-30-15 66"/>
+      <path d="M1258 267l-16 83-82-38-14 56-86 8 7 26-63 40"/>
+    </g>
+  </g>
+
+  <g fill="#e83c27">
+    <circle cx="239" cy="261" r="5"/><circle cx="299" cy="292" r="7"/>
+    <circle cx="342" cy="278" r="6"/><circle cx="313" cy="344" r="4"/>
+    <circle cx="361" cy="359" r="7"/><circle cx="393" cy="325" r="5"/>
+    <circle cx="411" cy="395" r="5"/><circle cx="441" cy="316" r="7"/>
+    <circle cx="458" cy="371" r="5"/><circle cx="488" cy="433" r="6"/>
+    <circle cx="504" cy="374" r="4"/><circle cx="538" cy="400" r="6"/>
+    <circle cx="557" cy="465" r="5"/><circle cx="604" cy="436" r="4"/>
+    <circle cx="623" cy="492" r="5"/><circle cx="653" cy="464" r="3"/>
+    <circle cx="682" cy="522" r="4"/><circle cx="710" cy="503" r="3"/>
+    <circle cx="735" cy="553" r="4"/><circle cx="761" cy="539" r="3"/>
+  </g>
+
+  <g fill="#7026b8">
+    <circle cx="1364" cy="238" r="5"/><circle cx="1302" cy="277" r="7"/>
+    <circle cx="1258" cy="267" r="6"/><circle cx="1290" cy="330" r="4"/>
+    <circle cx="1242" cy="350" r="7"/><circle cx="1208" cy="318" r="5"/>
+    <circle cx="1194" cy="389" r="5"/><circle cx="1160" cy="312" r="7"/>
+    <circle cx="1146" cy="368" r="5"/><circle cx="1119" cy="433" r="6"/>
+    <circle cx="1106" cy="375" r="4"/><circle cx="1067" cy="402" r="6"/>
+    <circle cx="1052" cy="469" r="5"/><circle cx="1004" cy="442" r="4"/>
+    <circle cx="988" cy="498" r="5"/><circle cx="955" cy="471" r="3"/>
+    <circle cx="929" cy="530" r="4"/><circle cx="900" cy="512" r="3"/>
+    <circle cx="875" cy="560" r="4"/><circle cx="847" cy="546" r="3"/>
+  </g>
+
+  <g fill="#ef7d45" opacity=".86">
+    <circle cx="544" cy="469" r="2.5"/><circle cx="580" cy="484" r="3"/>
+    <circle cx="612" cy="511" r="2"/><circle cx="646" cy="526" r="2.5"/>
+    <circle cx="676" cy="548" r="2"/><circle cx="704" cy="566" r="2.5"/>
+    <circle cx="729" cy="585" r="2"/><circle cx="751" cy="603" r="2.5"/>
+    <circle cx="773" cy="617" r="2"/><circle cx="791" cy="633" r="2.5"/>
+  </g>
+  <g fill="#2f3fc2" opacity=".86">
+    <circle cx="1064" cy="474" r="2.5"/><circle cx="1028" cy="491" r="3"/>
+    <circle cx="997" cy="518" r="2"/><circle cx="963" cy="534" r="2.5"/>
+    <circle cx="934" cy="555" r="2"/><circle cx="906" cy="574" r="2.5"/>
+    <circle cx="881" cy="592" r="2"/><circle cx="859" cy="610" r="2.5"/>
+    <circle cx="837" cy="624" r="2"/><circle cx="819" cy="639" r="2.5"/>
+  </g>
+
+  <g fill="#e5aa16">
+    <circle cx="438" cy="449" r="5"/><circle cx="521" cy="513" r="4"/>
+    <circle cx="1091" cy="510" r="4"/><circle cx="1171" cy="443" r="5"/>
+    <circle cx="800" cy="657" r="6"/>
+  </g>
+</svg>
