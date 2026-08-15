@@ -12,7 +12,12 @@ from urllib.parse import unquote, urlsplit
 
 
 REQUIRED_PAGES = ("index.html", "about.html", "projects.html", "contact.html", "404.html")
-REQUIRED_ASSETS = ("styles/main.css", "images/favicon.svg", "images/morphogenesis.svg")
+REQUIRED_ASSETS = (
+    "styles/main.css",
+    "images/favicon.svg",
+    "images/morphogenesis.svg",
+    "scripts/favicon-preview.js",
+)
 LANDMARKS = ("header", "nav", "main", "footer")
 APEX = "https://henrybissonnette.com"
 TOPICS = ("AI", "COMPUTATION", "LIFE", "PHILOSOPHY", "LEARNING")
@@ -180,10 +185,32 @@ def validate_site(site_root: Path) -> list[str]:
                 f"site/{relative}: canonical must be exactly {expected_canonical!r}; found {canonicals!r}"
             )
 
+        favicon_links = [
+            attrs
+            for attrs in document.attrs.get("link", [])
+            if "icon" in (attrs.get("rel") or "").split()
+        ]
+        if (
+            len(favicon_links) != 1
+            or favicon_links[0].get("id") != "site-favicon"
+            or favicon_links[0].get("href") != "images/favicon.svg"
+        ):
+            errors.append(
+                f"site/{relative}: expected one site-favicon fallback link for the preview rotator"
+            )
+
+        scripts = document.attrs.get("script", [])
+        if (
+            len(scripts) != 1
+            or scripts[0].get("src") != "scripts/favicon-preview.js"
+            or "defer" not in scripts[0]
+        ):
+            errors.append(
+                f"site/{relative}: expected exactly one deferred local favicon preview script"
+            )
+
         if document.attrs.get("form"):
             errors.append(f"site/{relative}: forms are outside the static publication contract")
-        if document.attrs.get("script"):
-            errors.append(f"site/{relative}: scripts are outside this dependency-free publication")
 
         for image in document.attrs.get("img", []):
             source = image.get("src") or "<missing src>"

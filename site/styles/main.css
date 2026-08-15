@@ -80,6 +80,18 @@ main {
   background: color-mix(in srgb, var(--ground) 92%, transparent);
 }
 
+.home main {
+  padding-inline: 0;
+}
+
+.home .site-header {
+  position: absolute;
+  inset: 0 0 auto;
+  padding-inline: clamp(2rem, 5.8vw, 5.75rem);
+  border-bottom: 0;
+  background: transparent;
+}
+
 .nav-shell,
 .footer-shell,
 .hero,
@@ -94,6 +106,13 @@ main {
   justify-content: space-between;
   min-height: 5.5rem;
   gap: 2rem;
+}
+
+.home .nav-shell {
+  width: 100%;
+  min-height: 0;
+  align-items: flex-start;
+  padding-top: clamp(2.25rem, 5.5vh, 4rem);
 }
 
 .wordmark,
@@ -120,6 +139,19 @@ main {
   text-transform: uppercase;
 }
 
+.home .wordmark {
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 0;
+  width: 125%;
+  font-size: clamp(3.5rem, 6.1vw, 6.1rem);
+  letter-spacing: -0.085em;
+  line-height: 0.82;
+  text-shadow: 0 0 2.5rem var(--ground-light);
+  transform: scaleX(0.8);
+  transform-origin: left top;
+}
+
 .nav-list {
   display: flex;
   flex-wrap: wrap;
@@ -128,6 +160,13 @@ main {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.home .nav-list {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
 }
 
 .nav-list a {
@@ -141,6 +180,19 @@ main {
   letter-spacing: 0.075em;
   text-decoration: none;
   text-transform: uppercase;
+}
+
+.home .nav-list a {
+  min-width: 9.5rem;
+  justify-content: flex-end;
+  padding-inline: 0.4rem 0;
+  border-bottom: 1px solid rgba(9, 9, 9, 0.16);
+  font-size: clamp(0.82rem, 1.05vw, 1rem);
+  text-shadow: 0 0 1.5rem var(--ground-light);
+}
+
+.home .nav-list a[aria-current="page"] {
+  text-decoration: none;
 }
 
 .nav-list a[aria-current="page"] {
@@ -175,6 +227,13 @@ main {
   isolation: isolate;
 }
 
+.home .hero {
+  width: 100%;
+  max-width: none;
+  height: max(47rem, calc(100svh - 8.75rem));
+  min-height: 47rem;
+}
+
 .hero-copy {
   position: relative;
   z-index: 2;
@@ -185,6 +244,17 @@ main {
   text-align: center;
 }
 
+.home .hero-copy {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  z-index: 3;
+  width: min(42rem, 48vw);
+  margin: 0;
+  padding: 0;
+  transform: translate(-50%, -25%);
+}
+
 .hero-copy::before {
   position: absolute;
   inset: clamp(2.75rem, 7vh, 5.25rem) -3rem auto;
@@ -193,6 +263,12 @@ main {
   border-radius: 50%;
   background: radial-gradient(ellipse, var(--ground-light) 0 52%, transparent 75%);
   content: "";
+}
+
+.home .hero-copy::before {
+  inset: -4.5rem -9rem;
+  height: auto;
+  background: radial-gradient(ellipse, rgba(253, 233, 214, 0.98) 0 35%, rgba(247, 220, 195, 0.78) 57%, transparent 76%);
 }
 
 .eyebrow {
@@ -222,6 +298,19 @@ h1 {
 .hero h1 {
   max-width: 12ch;
   margin-inline: auto;
+}
+
+.home .hero h1 {
+  max-width: 15ch;
+  font-size: clamp(2.75rem, 4.1vw, 4.5rem);
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+
+.home .hero .lede {
+  max-width: 36rem;
+  font-size: clamp(1.05rem, 1.35vw, 1.28rem);
+  line-height: 1.45;
 }
 
 .lede {
@@ -286,11 +375,19 @@ h1 {
   pointer-events: none;
 }
 
+.home .hero-art {
+  height: 100%;
+}
+
 .hero-art img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center bottom;
+}
+
+.home .hero-art img {
+  object-position: center center;
 }
 
 .page-shell {
@@ -302,24 +399,27 @@ h1 {
 .page-shell::after {
   position: absolute;
   z-index: -1;
-  width: clamp(10rem, 25vw, 24rem);
-  height: clamp(10rem, 25vw, 24rem);
-  border-radius: 54% 46% 60% 40%;
-  opacity: 0.16;
+  width: clamp(20rem, 32vw, 31rem);
+  height: clamp(25rem, 38vw, 37rem);
+  background-image: url("../images/morphogenesis.svg");
+  background-repeat: no-repeat;
+  background-size: 86rem auto;
+  opacity: 0.2;
   content: "";
-  filter: saturate(1.25);
+  filter: saturate(1.15);
+  pointer-events: none;
 }
 
 .page-shell::before {
-  top: 2rem;
-  left: min(-7vw, -2rem);
-  background: radial-gradient(circle at 32% 37%, var(--orange) 0 8%, transparent 9%), radial-gradient(circle at 55% 55%, var(--coral) 0 12%, transparent 13%), radial-gradient(circle at 48% 50%, var(--coral) 0 48%, transparent 49%);
+  top: 1rem;
+  left: clamp(-28rem, -27vw, -20rem);
+  background-position: left bottom;
 }
 
 .page-shell::after {
-  right: min(-7vw, -2rem);
-  bottom: 3rem;
-  background: radial-gradient(circle at 35% 32%, var(--violet) 0 8%, transparent 9%), radial-gradient(circle at 61% 52%, var(--blue) 0 15%, transparent 16%), radial-gradient(circle at 50% 50%, var(--cobalt) 0 48%, transparent 49%);
+  right: clamp(-28rem, -27vw, -20rem);
+  bottom: 1rem;
+  background-position: right bottom;
 }
 
 .page-intro {
@@ -508,6 +608,12 @@ h1 {
 .topic-word:nth-child(4) { color: #6170ff; }
 .topic-word:nth-child(5) { color: #2794ff; }
 
+.home .topic-band {
+  min-height: 8.75rem;
+  padding-block: clamp(1.65rem, 2.7vw, 2.6rem);
+  font-size: clamp(1.8rem, 3.1vw, 3.15rem);
+}
+
 .footer-shell {
   display: flex;
   justify-content: space-between;
@@ -530,6 +636,66 @@ h1 {
 }
 
 @media (max-width: 48rem) {
+  .home .site-header {
+    position: relative;
+    padding-inline: var(--page-gutter);
+  }
+
+  .home .nav-shell {
+    min-height: 5.5rem;
+    align-items: center;
+    padding-top: 0;
+  }
+
+  .home .wordmark {
+    display: inline-flex;
+    flex-direction: row;
+    gap: 0.3em;
+    width: auto;
+    font-size: clamp(1.35rem, 4.8vw, 2.25rem);
+    letter-spacing: -0.055em;
+    line-height: 1;
+    transform: none;
+  }
+
+  .home .nav-list {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    margin-top: 0;
+  }
+
+  .home .nav-list a {
+    min-width: 0;
+    justify-content: flex-start;
+    border-bottom: 0;
+    font-size: 0.72rem;
+  }
+
+  .home .hero {
+    height: auto;
+    min-height: 49rem;
+  }
+
+  .home .hero-copy {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(100% - 2.5rem, 38rem);
+    margin-inline: auto;
+    padding-block: 3.5rem 29rem;
+    transform: none;
+  }
+
+  .home .hero-copy::before {
+    inset: 1.5rem -2rem auto;
+    height: 19rem;
+  }
+
+  .home .hero-art {
+    height: 31rem;
+  }
+
   .hero-copy {
     width: min(100%, 37rem);
     padding-block: 3.75rem clamp(20rem, 75vw, 29rem);
@@ -567,6 +733,19 @@ h1 {
 
   .nav-shell {
     padding-block: 1rem;
+  }
+
+  .home .nav-shell {
+    align-items: flex-start;
+  }
+
+  .home .wordmark {
+    font-size: 1.8rem;
+  }
+
+  .home .nav-list {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .nav-list {

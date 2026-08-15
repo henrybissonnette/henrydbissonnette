@@ -112,6 +112,21 @@ class CheckSiteTests(unittest.TestCase):
 
         self.assertTrue(any("site/404.html" in error and "canonical sequence" in error for error in errors), errors)
 
+    def test_missing_favicon_preview_script_reports_page(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "index.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                '  <script src="scripts/favicon-preview.js" defer></script>\n', ""
+            ),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(any("site/index.html" in error and "favicon preview script" in error for error in errors), errors)
+
 
 if __name__ == "__main__":
     unittest.main()

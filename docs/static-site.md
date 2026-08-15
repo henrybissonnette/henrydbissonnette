@@ -1,9 +1,12 @@
 # Static publication
 
 `site/` is the complete deployable artifact for henrybissonnette.com. It is
-checked in as exact HTML, CSS, and SVG bytes: there is no build step, package
-installation, environment substitution, application server, or network input.
-A static server or deployment job should publish that directory unchanged.
+checked in as exact HTML, CSS, SVG, and JavaScript bytes: there is no build
+step, package installation, environment substitution, application server, or
+network input. A static server or deployment job should publish that directory
+unchanged. The only client-side script is the temporary, dependency-free
+favicon concept rotator used during product selection; it embeds four local
+32-pixel previews and never fetches or persists data.
 
 Run the durable source check from the repository root:
 
