@@ -146,6 +146,22 @@ class CheckSiteTests(unittest.TestCase):
             errors,
         )
 
+    def test_essay_overlap_trims_are_enforced(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "you-must-solve-problems.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace("--panel-aspect: 766 / 534", "--panel-aspect: 766 / 540", 1),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(
+            any("capture panels must preserve the pixel-registered overlap trims" in error for error in errors),
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

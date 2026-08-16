@@ -33,8 +33,8 @@ REQUIRED_ASSETS = (
     "images/morphogenesis-contact-mobile-generated.png",
     "images/morphogenesis-essays-generated.png",
     "images/morphogenesis-essays-mobile-generated.png",
-    "images/morphogenesis-essay-problems-generated.png",
-    "images/morphogenesis-essay-problems-mobile-generated.png",
+    "images/morphogenesis-essay-problems-v2-generated.png",
+    "images/morphogenesis-essay-problems-v2-mobile-generated.png",
     "images/morphogenesis-404-generated.png",
     "images/morphogenesis-404-mobile-generated.png",
     "images/essay-you-must-solve-problems/segment-01-title-and-question.png",
@@ -56,6 +56,13 @@ ESSAY_CAPTURE_SEGMENTS = tuple(
         (4, "answer-conclusion"),
         (5, "comments"),
     )
+)
+ESSAY_CAPTURE_STYLES = (
+    "--panel-aspect: 766 / 587; --crop-y: 0%;",
+    "--panel-aspect: 766 / 534; --crop-y: -18.721461%;",
+    "--panel-aspect: 766 / 593; --crop-y: -9.741248%;",
+    "--panel-aspect: 766 / 593; --crop-y: -9.741248%;",
+    "--panel-aspect: 766 / 421; --crop-y: -13.195876%;",
 )
 
 
@@ -311,6 +318,11 @@ def validate_site(site_root: Path) -> list[str]:
         if capture_hrefs != ESSAY_CAPTURE_SEGMENTS:
             errors.append(
                 "site/you-must-solve-problems.html: capture panels must link the five ordered native segments"
+            )
+        capture_styles = tuple(attrs.get("style") for attrs in capture_panels)
+        if capture_styles != ESSAY_CAPTURE_STYLES:
+            errors.append(
+                "site/you-must-solve-problems.html: capture panels must preserve the pixel-registered overlap trims"
             )
 
         transcripts = [

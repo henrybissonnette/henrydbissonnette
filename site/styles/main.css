@@ -102,8 +102,8 @@ body:not(.home) main {
 }
 
 .page-essay {
-  --page-art: url("../images/morphogenesis-essay-problems-generated.png");
-  --page-art-mobile: url("../images/morphogenesis-essay-problems-mobile-generated.png");
+  --page-art: url("../images/morphogenesis-essay-problems-v2-generated.png");
+  --page-art-mobile: url("../images/morphogenesis-essay-problems-v2-mobile-generated.png");
 }
 
 .page-not-found {
@@ -607,11 +607,8 @@ h1 {
 .essay-index,
 .essay-meta,
 .essay-arrow,
-.essay-back,
-.essay-byline,
 .transcript-meta,
-.comment-credit,
-.capture-figure figcaption {
+.comment-credit {
   font-family: var(--font-ui);
 }
 
@@ -650,92 +647,36 @@ h1 {
 }
 
 .page-essay main {
-  background-size: min(100%, 99.125rem) auto;
+  background-size: min(100%, 96.75rem) auto;
 }
 
 .essay-article {
   width: min(100%, var(--content));
   margin-inline: auto;
-  padding: clamp(4rem, 8vw, 7rem) 0 clamp(5rem, 9vw, 8rem);
+  padding: clamp(3rem, 6vw, 5rem) 0 clamp(5rem, 9vw, 8rem);
 }
 
 .essay-header {
-  width: min(100%, 58rem);
+  width: min(100%, 766px);
   margin-inline: auto;
-  padding: clamp(1.5rem, 4vw, 3rem);
-  background: color-mix(in srgb, var(--ground-light) 88%, transparent);
-  box-shadow: 1rem 1rem 0 rgba(112, 38, 184, 0.12);
-}
-
-.essay-back {
-  margin: 0 0 clamp(3rem, 7vw, 5rem);
-  font-size: 0.8rem;
-  font-weight: 750;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.essay-back span {
-  padding-inline: 0.35rem;
+  padding: 0;
 }
 
 .essay-header h1 {
-  max-width: 11ch;
-  font-size: clamp(3.8rem, 8.4vw, 7.8rem);
-}
-
-.essay-deck {
-  max-width: 44rem;
-  margin: clamp(1.6rem, 4vw, 2.5rem) 0 0;
-  color: #332a26;
-  font-size: clamp(1.25rem, 2.2vw, 1.65rem);
-  line-height: 1.5;
-}
-
-.essay-byline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.essay-byline span:not(:last-child)::after {
-  margin-left: 1.5rem;
-  color: var(--coral);
-  content: "●";
-}
-
-.source-link {
-  margin: 1.25rem 0 0;
-  font-size: 0.95rem;
+  max-width: 12ch;
+  font-size: clamp(3.2rem, 6vw, 6rem);
+  text-shadow:
+    0 0 0.45rem var(--ground-light),
+    0 0 1.2rem var(--ground-light);
 }
 
 .capture-section {
-  width: min(100%, 64rem);
-  margin: clamp(4rem, 9vw, 8rem) auto 0;
-}
-
-.capture-heading {
-  width: min(100%, 48rem);
-  margin-inline: auto;
-}
-
-.capture-heading h2 {
-  margin: 0;
-  font-size: clamp(2.4rem, 5vw, 4rem);
-}
-
-.capture-heading > p:last-child {
-  max-width: 43rem;
-  margin: 1.2rem 0 0;
+  width: min(100%, 52rem);
+  margin: clamp(2.25rem, 5vw, 4rem) auto 0;
 }
 
 .capture-figure {
-  margin: clamp(2rem, 5vw, 3.5rem) 0 0;
+  margin: 0;
   padding: clamp(0.45rem, 2vw, 1.5rem);
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: #090909;
@@ -772,14 +713,6 @@ h1 {
   box-shadow: inset 0 0 0 9px #090909;
 }
 
-.capture-figure figcaption {
-  width: min(100%, 766px);
-  margin: 0.9rem auto 0;
-  color: #d8c5b4;
-  font-size: 0.75rem;
-  line-height: 1.45;
-}
-
 .transcript-section,
 .essay-license {
   width: min(100%, 48rem);
@@ -787,17 +720,17 @@ h1 {
 }
 
 .transcript-section {
-  margin-top: clamp(4rem, 9vw, 7rem);
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
 }
 
 .transcript {
-  border-block: 2px solid var(--ink);
-  background: color-mix(in srgb, var(--ground-light) 88%, transparent);
+  border-block: 1px solid var(--ink);
+  background: transparent;
 }
 
 .transcript summary {
-  min-height: 5.5rem;
-  padding: 1.25rem 3rem 1.25rem 1.25rem;
+  min-height: 4.5rem;
+  padding: 1rem 2rem 1rem 0;
   cursor: pointer;
   list-style-position: outside;
 }
@@ -813,19 +746,13 @@ h1 {
   box-shadow: 0 0 0 8px var(--ground-light);
 }
 
-.transcript summary > span {
-  display: inline-grid;
-  gap: 0.15rem;
-}
-
-.transcript summary .eyebrow {
-  margin: 0;
-}
-
 .transcript summary strong {
-  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
   font-weight: 500;
   letter-spacing: -0.025em;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.22em;
 }
 
 .transcript-body {
@@ -1076,20 +1003,11 @@ h1 {
   }
 
   .essay-header {
-    padding: 1.25rem;
+    padding-inline: 0;
   }
 
   .essay-header h1 {
-    font-size: clamp(3.4rem, 17vw, 5rem);
-  }
-
-  .essay-byline {
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  .essay-byline span::after {
-    display: none;
+    font-size: clamp(3rem, 14vw, 4.25rem);
   }
 
   .capture-figure {

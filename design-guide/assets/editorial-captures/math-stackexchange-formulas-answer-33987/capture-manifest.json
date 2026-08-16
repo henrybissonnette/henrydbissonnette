@@ -14,7 +14,7 @@
     },
     "device_pixel_ratio": 1,
     "content_width_pixels": 766,
-    "stitched_height_pixels": 2755
+    "stitched_height_pixels": 2728
   },
   "segments": [
     {
@@ -27,25 +27,25 @@
       "file": "segment-02-answer-opening.png",
       "width": 766,
       "height": 657,
-      "trim_top_for_stitch": 117
+      "trim_top_for_stitch": 123
     },
     {
       "file": "segment-03-answer-development.png",
       "width": 766,
       "height": 657,
-      "trim_top_for_stitch": 57
+      "trim_top_for_stitch": 64
     },
     {
       "file": "segment-04-answer-conclusion.png",
       "width": 766,
       "height": 657,
-      "trim_top_for_stitch": 57
+      "trim_top_for_stitch": 64
     },
     {
       "file": "segment-05-comments.png",
       "width": 766,
       "height": 485,
-      "trim_top_for_stitch": 57
+      "trim_top_for_stitch": 64
     }
   ]
 }

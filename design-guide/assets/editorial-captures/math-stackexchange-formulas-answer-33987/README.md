@@ -33,10 +33,14 @@ Use the files in numeric order at their native 766-pixel width. The overlap is
 deliberate; it gives layout agents stable visual landmarks and avoids a seam
 through a line of text.
 
-- Trim 117 pixels from the top of segment 02.
-- Trim 57 pixels from the top of segments 03, 04, and 05.
+- Trim 123 pixels from the top of segment 02.
+- Trim 64 pixels from the top of segments 03, 04, and 05.
 - Concatenate without scaling or cross-fading.
-- The resulting composite is 766 x 2755 pixels.
+- The resulting composite is 766 x 2728 pixels.
+
+These revised values were verified by pixel-registering each segment against
+the preceding segment. They remove the final repeated row fragments that were
+still visible in the capture's first publication pass.
 
 The panels may also be presented independently as a progressive scroll
 sequence. Do not use OCR output as the visual authority when the original
