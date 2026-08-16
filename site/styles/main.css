@@ -73,6 +73,14 @@ main {
   overflow: hidden;
 }
 
+body:not(.home) main {
+  background-color: var(--ground);
+  background-image: url("../images/morphogenesis-inner-generated.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .site-header {
   position: relative;
   z-index: 3;
@@ -386,6 +394,12 @@ h1 {
   object-position: center bottom;
 }
 
+.hero-art picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .home .hero-art img {
   object-position: center center;
 }
@@ -393,33 +407,6 @@ h1 {
 .page-shell {
   position: relative;
   padding-block: clamp(4rem, 9vw, 7rem);
-}
-
-.page-shell::before,
-.page-shell::after {
-  position: absolute;
-  z-index: -1;
-  width: clamp(20rem, 32vw, 31rem);
-  height: clamp(25rem, 38vw, 37rem);
-  background-image: url("../images/morphogenesis.svg");
-  background-repeat: no-repeat;
-  background-size: 86rem auto;
-  opacity: 0.2;
-  content: "";
-  filter: saturate(1.15);
-  pointer-events: none;
-}
-
-.page-shell::before {
-  top: 1rem;
-  left: clamp(-28rem, -27vw, -20rem);
-  background-position: left bottom;
-}
-
-.page-shell::after {
-  right: clamp(-28rem, -27vw, -20rem);
-  bottom: 1rem;
-  background-position: right bottom;
 }
 
 .page-intro {
@@ -674,7 +661,7 @@ h1 {
 
   .home .hero {
     height: auto;
-    min-height: 49rem;
+    min-height: 52rem;
   }
 
   .home .hero-copy {
@@ -683,7 +670,7 @@ h1 {
     left: auto;
     width: min(100% - 2.5rem, 38rem);
     margin-inline: auto;
-    padding-block: 3.5rem 29rem;
+    padding-block: 4rem 30rem;
     transform: none;
   }
 
@@ -693,7 +680,11 @@ h1 {
   }
 
   .home .hero-art {
-    height: 31rem;
+    height: 100%;
+  }
+
+  .home .hero-art img {
+    object-position: center center;
   }
 
   .hero-copy {
@@ -776,10 +767,13 @@ h1 {
     background: CanvasText;
   }
 
-  .hero-art,
-  .page-shell::before,
-  .page-shell::after {
+  .hero-art {
     display: none;
+  }
+
+
+  body:not(.home) main {
+    background-image: none;
   }
 
   .topic-word,

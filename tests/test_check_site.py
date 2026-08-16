@@ -78,7 +78,10 @@ class CheckSiteTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         page = site / "index.html"
         page.write_text(
-            page.read_text(encoding="utf-8").replace("images/morphogenesis.svg", "https://cdn.example/morphogenesis.svg"),
+            page.read_text(encoding="utf-8").replace(
+                "images/morphogenesis-home-generated.png",
+                "https://cdn.example/morphogenesis-home-generated.png",
+            ),
             encoding="utf-8",
         )
 

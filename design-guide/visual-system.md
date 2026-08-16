@@ -10,6 +10,13 @@ The core tension is:
 
 > disciplined editorial clarity inside an ecology of emergent form
 
+The visual quality is a product requirement, not optional decoration. The site
+should feel thoroughly designed, bespoke, luxurious, sumptuous, ornate, and
+baroquely deep—as though its level of detail would be impractical to construct
+by hand. Use AI image generation deliberately where it enables that finish.
+Accessibility and performance are delivery constraints to solve without
+cheapening the art direction.
+
 ## Design grammar
 
 ### Ground and clearing
@@ -110,7 +117,9 @@ transitions.
 
 Allow the cellular territories to dominate the lower edges while a central
 clearing carries a concise statement. Preserve the strong name, dotted nav,
-and topic band. Do not copy fabricated labels from the mockup.
+and topic band. Do not copy fabricated labels from the mockup. Prefer newly
+generated, site-specific raster fields informed by the selected references;
+never ship the reference mockups themselves or generated interface text.
 
 ### Essay
 

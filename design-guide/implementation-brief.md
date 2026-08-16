@@ -27,9 +27,12 @@ status, metrics, and links before publishing them.
    type, spacing, rule, focus, and motion tokens. Create semantic page,
    masthead, navigation-dot, topic-band, editorial-row, and project-row
    primitives.
-2. **Build one code-native motif.** Implement a responsive cellular-to-graph
-   field as SVG first. Prove cropping, theming, reduced motion, and acceptable
-   paint cost. Escalate to Canvas/WebGL only for interactions SVG cannot carry.
+2. **Build a production visual field.** Use image generation with the selected
+   studies as references to create new, text-free raster artwork with the
+   density, material depth, and finish of the guide. Art-direct desktop and
+   mobile crops separately. Keep content and interaction in semantic HTML/CSS;
+   use SVG, Canvas, or WebGL only where they improve real behavior rather than
+   as lower-fidelity substitutes for the flagship artwork.
 3. **Rebuild the homepage.** Use 06 as the visual reference while replacing all
    exploratory copy with approved content.
 4. **Build the reading system.** Implement the essay and archive patterns from
@@ -47,13 +50,17 @@ status, metrics, and links before publishing them.
 ## Implementation constraints
 
 - Do not use the reference PNGs as page backgrounds or embedded interface
-  screenshots.
+  screenshots. They are inputs for generating new site-specific production
+  artwork, not production assets themselves.
 - Prefer semantic HTML and CSS for content and layout.
-- Prefer SVG for static or lightly animated cellular/graph motifs.
+- Use generated raster artwork for flagship visual surfaces when code-native
+  motifs cannot match the reference quality. Generated art must contain no UI,
+  labels, logos, or body copy; real content remains accessible HTML.
 - Use Canvas/WebGL only when simulation scale or interaction makes it useful;
   provide a meaningful static fallback.
-- Keep visual layers isolated from content so art can be simplified at narrow
-  breakpoints.
+- Keep visual layers isolated from content and use responsive art direction at
+  narrow breakpoints. Performance work should optimize delivery and cropping,
+  not reduce the visual ambition or replace rich artwork with generic blobs.
 - Avoid framework adoption solely for decorative motion. Introduce runtime code
   only when it provides real behavior.
 - Keep the site's current deployment checks and exact publication contract
@@ -72,8 +79,11 @@ The review should ask:
 - Are all interactive states clear without relying on color alone?
 - Does the page avoid every anti-pattern in `visual-system.md`?
 
-Compare desktop work to the references at a similar 16:10 viewport, but do not
-pixel-match generated artifacts. Judge system fidelity, hierarchy, and intent.
+Compare desktop work to the references at a similar 16:10 viewport and compare
+mobile work at matching narrow viewports. Judge not only component presence but
+also material richness, density, asymmetry, hierarchy, atmosphere, and overall
+finish. The site should feel bespoke, sumptuous, ornate, and futuristically
+lavish—never like a schematic or inexpensive approximation.
 
 ## Favicon workflow
 

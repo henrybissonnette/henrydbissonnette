@@ -15,7 +15,9 @@ REQUIRED_PAGES = ("index.html", "about.html", "projects.html", "contact.html", "
 REQUIRED_ASSETS = (
     "styles/main.css",
     "images/favicon.svg",
-    "images/morphogenesis.svg",
+    "images/morphogenesis-home-generated.png",
+    "images/morphogenesis-home-mobile-generated.png",
+    "images/morphogenesis-inner-generated.png",
     "scripts/favicon-preview.js",
 )
 LANDMARKS = ("header", "nav", "main", "footer")
