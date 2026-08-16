@@ -19,6 +19,14 @@ concepts from the original exploration workspace.
    the direction into code, using [`assets/design-tokens.css`](assets/design-tokens.css)
    as a provisional token source.
 
+## Supplemental editorial source material
+
+The design guide also carries a native-page capture of Hank's Mathematics
+Stack Exchange answer and its complete comment thread. It lives under
+[`assets/editorial-captures/math-stackexchange-formulas-answer-33987/`](assets/editorial-captures/math-stackexchange-formulas-answer-33987/README.md).
+That capture is content source material with its own attribution and stitching
+instructions; it is not visual-system authority.
+
 ## Status and authority
 
 Direction 06, **Chromatic Morphogenesis**, is selected. Its concept and design

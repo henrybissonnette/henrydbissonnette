@@ -130,6 +130,22 @@ class CheckSiteTests(unittest.TestCase):
 
         self.assertTrue(any("site/index.html" in error and "favicon preview script" in error for error in errors), errors)
 
+    def test_essay_capture_sequence_is_enforced(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "you-must-solve-problems.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace('class="capture-panel"', 'class="capture-panel-missing"', 1),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(
+            any("capture panels must link the five ordered native segments" in error for error in errors),
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

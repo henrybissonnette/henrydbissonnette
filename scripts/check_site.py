@@ -11,7 +11,15 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 
-REQUIRED_PAGES = ("index.html", "about.html", "projects.html", "contact.html", "404.html")
+REQUIRED_PAGES = (
+    "index.html",
+    "about.html",
+    "essays.html",
+    "you-must-solve-problems.html",
+    "projects.html",
+    "contact.html",
+    "404.html",
+)
 REQUIRED_ASSETS = (
     "styles/main.css",
     "images/favicon.svg",
@@ -23,13 +31,32 @@ REQUIRED_ASSETS = (
     "images/morphogenesis-projects-mobile-generated.png",
     "images/morphogenesis-contact-generated.png",
     "images/morphogenesis-contact-mobile-generated.png",
+    "images/morphogenesis-essays-generated.png",
+    "images/morphogenesis-essays-mobile-generated.png",
+    "images/morphogenesis-essay-problems-generated.png",
+    "images/morphogenesis-essay-problems-mobile-generated.png",
     "images/morphogenesis-404-generated.png",
     "images/morphogenesis-404-mobile-generated.png",
+    "images/essay-you-must-solve-problems/segment-01-title-and-question.png",
+    "images/essay-you-must-solve-problems/segment-02-answer-opening.png",
+    "images/essay-you-must-solve-problems/segment-03-answer-development.png",
+    "images/essay-you-must-solve-problems/segment-04-answer-conclusion.png",
+    "images/essay-you-must-solve-problems/segment-05-comments.png",
     "scripts/favicon-preview.js",
 )
 LANDMARKS = ("header", "nav", "main", "footer")
 APEX = "https://henrybissonnette.com"
 TOPICS = ("AI", "COMPUTATION", "LIFE", "PHILOSOPHY", "LEARNING")
+ESSAY_CAPTURE_SEGMENTS = tuple(
+    f"images/essay-you-must-solve-problems/segment-{number:02d}-{name}.png"
+    for number, name in (
+        (1, "title-and-question"),
+        (2, "answer-opening"),
+        (3, "answer-development"),
+        (4, "answer-conclusion"),
+        (5, "comments"),
+    )
+)
 
 
 @dataclass
@@ -146,9 +173,9 @@ def validate_site(site_root: Path) -> list[str]:
             for attrs in document.attrs.get("span", [])
             if "nav-dot" in (attrs.get("class") or "").split()
         ]
-        if len(nav_dots) != 3 or any(attrs.get("aria-hidden") != "true" for attrs in nav_dots):
+        if len(nav_dots) != 4 or any(attrs.get("aria-hidden") != "true" for attrs in nav_dots):
             errors.append(
-                f"site/{relative}: expected three aria-hidden navigation dots; found {len(nav_dots)}"
+                f"site/{relative}: expected four aria-hidden navigation dots; found {len(nav_dots)}"
             )
 
         topic_bands = [
@@ -270,6 +297,45 @@ def validate_site(site_root: Path) -> list[str]:
         if mail_links != ["mailto:henrydbissonnette@gmail.com"]:
             errors.append(
                 "site/contact.html: expected one curated mailto link to henrydbissonnette@gmail.com"
+            )
+
+    essay = site_root / "you-must-solve-problems.html"
+    if essay.is_file():
+        document = parse_html(essay)
+        capture_panels = [
+            attrs
+            for attrs in document.attrs.get("a", [])
+            if "capture-panel" in (attrs.get("class") or "").split()
+        ]
+        capture_hrefs = tuple(attrs.get("href") for attrs in capture_panels)
+        if capture_hrefs != ESSAY_CAPTURE_SEGMENTS:
+            errors.append(
+                "site/you-must-solve-problems.html: capture panels must link the five ordered native segments"
+            )
+
+        transcripts = [
+            attrs
+            for attrs in document.attrs.get("details", [])
+            if "transcript" in (attrs.get("class") or "").split()
+        ]
+        if len(transcripts) != 1:
+            errors.append(
+                "site/you-must-solve-problems.html: expected one accessible transcript disclosure"
+            )
+
+        external_links = {
+            attrs.get("href")
+            for attrs in document.attrs.get("a", [])
+            if (attrs.get("href") or "").startswith(("http://", "https://"))
+        }
+        required_attribution_links = {
+            "https://math.stackexchange.com/questions/33656/whats-better-strategy-to-handle-tons-of-formulas-definitions/33987#33987",
+            "https://creativecommons.org/licenses/by-sa/3.0/",
+            "https://stackoverflow.com/help/licensing",
+        }
+        if not required_attribution_links.issubset(external_links):
+            errors.append(
+                "site/you-must-solve-problems.html: source and CC BY-SA attribution links are incomplete"
             )
 
     return errors
