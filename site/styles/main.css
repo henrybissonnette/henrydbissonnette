@@ -75,10 +75,30 @@ main {
 
 body:not(.home) main {
   background-color: var(--ground);
-  background-image: url("../images/morphogenesis-inner-generated.png");
+  background-image: var(--page-art);
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
+}
+
+.page-about {
+  --page-art: url("../images/morphogenesis-about-generated.png");
+  --page-art-mobile: url("../images/morphogenesis-about-mobile-generated.png");
+}
+
+.page-projects {
+  --page-art: url("../images/morphogenesis-projects-generated.png");
+  --page-art-mobile: url("../images/morphogenesis-projects-mobile-generated.png");
+}
+
+.page-contact {
+  --page-art: url("../images/morphogenesis-contact-generated.png");
+  --page-art-mobile: url("../images/morphogenesis-contact-mobile-generated.png");
+}
+
+.page-not-found {
+  --page-art: url("../images/morphogenesis-404-generated.png");
+  --page-art-mobile: url("../images/morphogenesis-404-mobile-generated.png");
 }
 
 .site-header {
@@ -427,6 +447,13 @@ h1 {
   text-transform: uppercase;
 }
 
+.page-intro .lede {
+  text-shadow:
+    0 0 0.45rem var(--ground-light),
+    0 0 1.15rem var(--ground-light),
+    0 0 2rem var(--ground-light);
+}
+
 .section {
   padding-block: clamp(3rem, 7vw, 5rem);
 }
@@ -623,6 +650,10 @@ h1 {
 }
 
 @media (max-width: 48rem) {
+  body:not(.home) main {
+    background-image: var(--page-art-mobile);
+  }
+
   .home .site-header {
     position: relative;
     padding-inline: var(--page-gutter);

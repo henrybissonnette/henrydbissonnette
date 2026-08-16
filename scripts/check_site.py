@@ -17,7 +17,14 @@ REQUIRED_ASSETS = (
     "images/favicon.svg",
     "images/morphogenesis-home-generated.png",
     "images/morphogenesis-home-mobile-generated.png",
-    "images/morphogenesis-inner-generated.png",
+    "images/morphogenesis-about-generated.png",
+    "images/morphogenesis-about-mobile-generated.png",
+    "images/morphogenesis-projects-generated.png",
+    "images/morphogenesis-projects-mobile-generated.png",
+    "images/morphogenesis-contact-generated.png",
+    "images/morphogenesis-contact-mobile-generated.png",
+    "images/morphogenesis-404-generated.png",
+    "images/morphogenesis-404-mobile-generated.png",
     "scripts/favicon-preview.js",
 )
 LANDMARKS = ("header", "nav", "main", "footer")
