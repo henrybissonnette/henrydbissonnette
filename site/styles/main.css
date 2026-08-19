@@ -646,11 +646,44 @@ h1 {
   font-size: 1.25rem;
 }
 
-.page-essay main {
-  background-size: min(100%, 96.75rem) auto;
+body.page-essay main {
+  --essay-frame-art: var(--page-art);
+  position: relative;
+  isolation: isolate;
+  background-image: none;
+}
+
+body.page-essay main::before,
+body.page-essay main::after {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 0;
+  height: clamp(38rem, 65vw, 70rem);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% auto;
+  content: "";
+  pointer-events: none;
+}
+
+body.page-essay main::before {
+  top: 0;
+  background-image:
+    linear-gradient(to bottom, transparent 58%, var(--ground) 100%),
+    var(--essay-frame-art);
+  background-position: center, center top;
+}
+
+body.page-essay main::after {
+  bottom: 0;
+  background-image:
+    linear-gradient(to top, transparent 58%, var(--ground) 100%),
+    var(--essay-frame-art);
+  background-position: center, center bottom;
 }
 
 .essay-article {
+  position: relative;
+  z-index: 1;
   width: min(100%, var(--content));
   margin-inline: auto;
   padding: clamp(3rem, 6vw, 5rem) 0 clamp(5rem, 9vw, 8rem);
@@ -998,8 +1031,9 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-  .page-essay main {
-    background-size: 100% auto;
+  body.page-essay main {
+    --essay-frame-art: var(--page-art-mobile);
+    background-image: none;
   }
 
   .essay-header {
@@ -1109,7 +1143,9 @@ h1 {
     background-image: none;
   }
 
-  .page-essay main {
+  body.page-essay main,
+  body.page-essay main::before,
+  body.page-essay main::after {
     background-image: none;
   }
 
