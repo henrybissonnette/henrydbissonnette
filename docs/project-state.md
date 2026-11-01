@@ -58,6 +58,9 @@ disagreed) and drafted the notes from the transcripts, filings and news reports
 listed on the page. The page says so, calls itself unofficial, and links every
 conversation to its page of the court's scan. It was generated once outside this
 repository and is checked in as finished HTML: corrections are direct edits.
+Where the court blacked out whole rows, sender included (four blocks in
+5387A), a centred black bubble stands in their place with the block's height
+in rows, measured from the scan.
 It uses the essay frame (`page-essay`) with the essay art, Projects navigation,
 and its own `styles/holmes-texts.css`. The check requires the court's exhibit
 folder and the source for Balwani's denial of Holmes's abuse allegations to stay

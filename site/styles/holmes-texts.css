@@ -398,7 +398,6 @@ body.page-texts main {
   content: "";
 }
 
-.gap,
 .sys {
   margin: 0.9rem 0;
   color: var(--muted);
@@ -471,6 +470,31 @@ body.page-texts main {
 
 .msg.h .redact {
   box-shadow: 0 0 0 1px rgba(255, 248, 239, 0.6);
+}
+
+/* Whole rows blacked out, sender and all: a bubble from no one, in the middle. */
+.msg.x {
+  justify-items: center;
+  margin: 0.9rem 0;
+}
+
+.msg.x .bubble {
+  border: 1px solid var(--rule);
+  background: var(--ground);
+}
+
+.msg.x .redact {
+  display: block;
+  width: min(14rem, 56vw);
+  height: 1.1em;
+}
+
+.msg.x .redact.block {
+  height: 2.9em;
+}
+
+.msg.x .flag {
+  text-align: center;
 }
 
 .flag {
@@ -600,7 +624,8 @@ body.page-texts main {
     border: 1px solid CanvasText;
   }
 
-  .texts-dot {
+  .texts-dot,
+  .redact {
     border-color: CanvasText;
     background: CanvasText;
   }
