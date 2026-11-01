@@ -75,6 +75,10 @@ signature. The canonical sequence is:
 
 `AI • COMPUTATION • LIFE • PHILOSOPHY • LEARNING`
 
+Current implementation note (2026-11-01): the homepage ends in `CULTURE`;
+other pages retain `LEARNING`. Preserve this local copy decision until Henry
+decides whether to unify the band. See `../docs/project-state.md`.
+
 It may operate as a footer, topic navigator, or contextual boundary between
 sections. Keep it intentional and spacious. Do not turn it into a stock ticker
 or animate it continuously without purpose.
@@ -126,6 +130,11 @@ never ship the reference mockups themselves or generated interface text.
 Prioritize reading. Keep the cellular motif in the margins and allow the
 article to become visually quieter as the reader moves down-page. Pull quotes
 may use coral or violet, but avoid magazine-like decoration.
+
+For long essays, anchor separate art fields at the header and footer, scaled
+to page width, with a quiet middle. Do not stretch one image to the full article
+height or leave a detached rectangle of artwork at wide desktop sizes. Expanding
+a transcript must not dilute or remove the framing.
 
 ### Archive
 

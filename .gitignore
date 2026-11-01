@@ -15,3 +15,10 @@ crash.*.log
 *.tfdiag
 .aws-runner/
 infra/aws/.tmp/
+
+# Local LFS checkouts and dispatch worktrees; source belongs in the parent repo.
+.lfs-bug-lanes/
+.lfs-feature-lanes/
+.lfs-dispatch-worktrees/
+.tracks/
+.DS_Store

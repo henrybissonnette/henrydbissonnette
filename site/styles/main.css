@@ -703,6 +703,71 @@ body.page-essay main::after {
     0 0 1.2rem var(--ground-light);
 }
 
+.essay-prose-header {
+  display: grid;
+  gap: 0.7rem;
+  padding-block: clamp(1rem, 4vw, 3rem) clamp(2.5rem, 6vw, 5rem);
+}
+
+.essay-prose-header h1 {
+  margin: 0;
+}
+
+.essay-dateline {
+  margin: 0;
+  color: #8f1f17;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.essay-subtitle {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1.35rem, 2.8vw, 2rem);
+  font-style: italic;
+  line-height: 1.2;
+}
+
+.essay-prose {
+  width: min(100%, 48rem);
+  margin-inline: auto;
+  padding: clamp(2rem, 6vw, 5rem);
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--ground-light) 94%, transparent);
+  box-shadow: clamp(0.55rem, 2vw, 1.4rem) clamp(0.55rem, 2vw, 1.4rem) 0 rgba(112, 38, 184, 0.13);
+}
+
+.essay-prose p {
+  margin: 0;
+  font-size: clamp(1.04rem, 0.45vw + 0.94rem, 1.2rem);
+  line-height: 1.78;
+}
+
+.essay-prose p + p {
+  margin-top: 1.55em;
+}
+
+.essay-prose > p:first-child {
+  font-size: clamp(1.18rem, 0.65vw + 1.02rem, 1.42rem);
+  line-height: 1.62;
+}
+
+.essay-prose h2 {
+  margin: clamp(4rem, 9vw, 6.5rem) 0 1.5rem;
+  padding-left: clamp(1rem, 2.5vw, 1.5rem);
+  border-left: 0.38rem solid var(--violet);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 500;
+}
+
+.essay-prose h2 + p {
+  margin-top: 0;
+}
+
 .capture-section {
   width: min(100%, 52rem);
   margin: clamp(2.25rem, 5vw, 4rem) auto 0;
@@ -1042,6 +1107,11 @@ body.page-essay main::after {
 
   .essay-header h1 {
     font-size: clamp(3rem, 14vw, 4.25rem);
+  }
+
+  .essay-prose {
+    padding: clamp(1.5rem, 7vw, 2.5rem);
+    box-shadow: 0.65rem 0.65rem 0 rgba(112, 38, 184, 0.13);
   }
 
   .capture-figure {

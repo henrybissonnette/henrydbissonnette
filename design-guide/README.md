@@ -1,10 +1,10 @@
 # HenryBissonnette.com design guide
 
-This compact handoff is the durable visual authority for the site's selected
-Chromatic Morphogenesis direction. It intentionally retains the selected
-reference and normative product/implementation documents, not the alternate
-render studies, generation prompts, future-page studies, or unselected favicon
-concepts from the original exploration workspace.
+This handoff is the durable visual authority for the site's selected Chromatic
+Morphogenesis direction. It also includes exploration history, prompts, page
+studies, and favicon candidates so agents on other machines can see how the
+direction was chosen. Archived alternatives are context, not competing briefs.
+See [current project state](../docs/project-state.md) for subsequent decisions.
 
 ## Start here
 
@@ -34,7 +34,22 @@ grammar are product direction. Mockup copy, project facts, dates, metrics,
 controls, diagrams, and article titles remain exploratory unless independently
 approved elsewhere.
 
-The reference PNG is design input, not a production website asset. It stays
-outside `site/`; recreate the system responsively with semantic HTML, CSS, and
-code-native SVG. Exact fonts, motion, future content families, photography, and
-favicon selection remain unresolved.
+The reference PNGs stay outside `site/`. Build responsive content with semantic
+HTML/CSS and use new, text-free generated artwork for the rich visual fields;
+use code-native graphics for meaningful diagrams and interaction. Existing
+production fields are in `site/images/`. Exact fonts, motion, future content
+families, photography, and final favicon selection remain unresolved.
+
+## Shared exploration archive
+
+- [Reference images](reference-images/): selected 06, alternatives 01–09, and
+  the 10–14 page-family studies. Only 06 sets the primary visual direction.
+- [UI render prompts](prompts/ui-render-prompts.md) and
+  [initial favicon prompts](prompts/favicon-prompts.md).
+- [Favicon studies](assets/favicon-options/README.md), including
+  [Living H round 3](assets/favicon-options/living-h-round-3/README.md), whose
+  four cropped previews are currently in the site's random rotation.
+- [Original exploration notes](../design-explorations/website-themes-2026-08-14/README.md).
+
+Mockup copy and recommendations are not approval to publish content. These
+archives are shared project assets, not part of the deployed website.

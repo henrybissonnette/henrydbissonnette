@@ -87,9 +87,11 @@ lavish—never like a schematic or inexpensive approximation.
 
 ## Favicon workflow
 
-The generated favicon concepts are exploratory. After Henry chooses one:
+The four cropped Living H round-3 previews currently rotate on page load.
+Henry has not selected a final icon. After he chooses one:
 
-1. redraw it as a minimal vector with deliberate geometry;
+1. refine its silhouette and internal divisions, using vector or raster as
+   appropriate to preserve both legibility and the selected living character;
 2. test it at 16, 24, 32, 48, 180, and 512 pixels;
 3. remove detail that muddies at 16 pixels;
 4. verify it on light and dark browser chrome;

@@ -16,6 +16,7 @@ REQUIRED_PAGES = (
     "about.html",
     "essays.html",
     "you-must-solve-problems.html",
+    "phase-shift.html",
     "projects.html",
     "contact.html",
     "404.html",
@@ -47,6 +48,7 @@ REQUIRED_ASSETS = (
 LANDMARKS = ("header", "nav", "main", "footer")
 APEX = "https://henrybissonnette.com"
 TOPICS = ("AI", "COMPUTATION", "LIFE", "PHILOSOPHY", "LEARNING")
+HOME_TOPICS = (*TOPICS[:-1], "CULTURE")
 ESSAY_CAPTURE_SEGMENTS = tuple(
     f"images/essay-you-must-solve-problems/segment-{number:02d}-{name}.png"
     for number, name in (
@@ -201,9 +203,10 @@ def validate_site(site_root: Path) -> list[str]:
             or topic_bands[0].get("aria-label") != "Topics"
         ):
             errors.append(f"site/{relative}: expected one topic band labelled Topics")
-        if [attrs.get("data-topic") for attrs in topic_words] != list(TOPICS):
+        expected_topics = HOME_TOPICS if relative == "index.html" else TOPICS
+        if [attrs.get("data-topic") for attrs in topic_words] != list(expected_topics):
             errors.append(
-                f"site/{relative}: topic band must contain the canonical sequence {' • '.join(TOPICS)}"
+                f"site/{relative}: topic band must contain the canonical sequence {' • '.join(expected_topics)}"
             )
 
         h1s = [text for level, text in document.headings if level == 1 and text]
@@ -349,6 +352,22 @@ def validate_site(site_root: Path) -> list[str]:
             errors.append(
                 "site/you-must-solve-problems.html: source and CC BY-SA attribution links are incomplete"
             )
+
+    phase_shift = site_root / "phase-shift.html"
+    if phase_shift.is_file():
+        document = parse_html(phase_shift)
+        external_links = {
+            attrs.get("href")
+            for attrs in document.attrs.get("a", [])
+            if (attrs.get("href") or "").startswith(("http://", "https://"))
+        }
+        required_source_links = {
+            "http://www.economist.com/blogs/graphicdetail/2012/02/daily-chart-0",
+            "http://www.huffingtonpost.com/robert-reich/worker-productivity_b_1315814.html",
+            "http://www.theatlantic.com/magazine/archive/2012/01/making-it-in-america/8844/",
+        }
+        if not required_source_links.issubset(external_links):
+            errors.append("site/phase-shift.html: source document hyperlinks are incomplete")
 
     return errors
 

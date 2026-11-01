@@ -162,6 +162,26 @@ class CheckSiteTests(unittest.TestCase):
             errors,
         )
 
+    def test_phase_shift_source_links_are_enforced(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "phase-shift.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                "http://www.economist.com/blogs/graphicdetail/2012/02/daily-chart-0",
+                "https://example.com/missing-source",
+                1,
+            ),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(
+            any("site/phase-shift.html" in error and "source document hyperlinks" in error for error in errors),
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
