@@ -18,11 +18,13 @@ REQUIRED_PAGES = (
     "you-must-solve-problems.html",
     "phase-shift.html",
     "projects.html",
+    "holmes-balwani-texts.html",
     "contact.html",
     "404.html",
 )
 REQUIRED_ASSETS = (
     "styles/main.css",
+    "styles/holmes-texts.css",
     "images/favicon.svg",
     "images/morphogenesis-home-generated.png",
     "images/morphogenesis-home-mobile-generated.png",
@@ -368,6 +370,23 @@ def validate_site(site_root: Path) -> list[str]:
         }
         if not required_source_links.issubset(external_links):
             errors.append("site/phase-shift.html: source document hyperlinks are incomplete")
+
+    texts = site_root / "holmes-balwani-texts.html"
+    if texts.is_file():
+        document = parse_html(texts)
+        external_links = {
+            attrs.get("href")
+            for attrs in document.attrs.get("a", [])
+            if (attrs.get("href") or "").startswith(("http://", "https://"))
+        }
+        required_record_links = {
+            "https://files.cand.uscourts.gov/files/18-CR-258%20USA%20v.%20Holmes/",
+            "https://www.cnbc.com/2021/08/28/elizabeth-holmes-plans-to-claim-at-trial-that-ex-boyfriend-and-theranos-business-partner-abused-her.html",
+        }
+        if not required_record_links.issubset(external_links):
+            errors.append(
+                "site/holmes-balwani-texts.html: the court's exhibit folder and the source for Balwani's denial must stay linked"
+            )
 
     return errors
 

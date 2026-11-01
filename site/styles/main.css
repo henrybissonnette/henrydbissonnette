@@ -531,6 +531,23 @@ h1 {
   color: #fff8ef;
 }
 
+/* A published record: the second wide band, in cobalt, completing the grid. */
+.project-grid .card-records {
+  grid-column: span 2;
+  background: var(--cobalt);
+  color: #fff8ef;
+}
+
+.project-grid .card-records .card-number,
+.project-grid .card-records p,
+.project-grid .card-records a {
+  color: #fff8ef;
+}
+
+.project-grid .card-records a:hover {
+  color: var(--ground);
+}
+
 .status {
   display: inline-block;
   margin-top: 1.25rem;
@@ -1125,7 +1142,8 @@ body.page-essay main::after {
     grid-template-columns: 1fr;
   }
 
-  .project-grid .card:first-child {
+  .project-grid .card:first-child,
+  .project-grid .card-records {
     grid-column: auto;
   }
 

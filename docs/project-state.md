@@ -1,6 +1,7 @@
 # Project state and handoff
 
-Last updated: **2026-11-01**, by Hostside Codex with Henry's authorization.
+Last updated: **2026-11-01**, by Hostside Codex with Henry's authorization, then
+by Claude for the Holmes–Balwani texts.
 This describes the source prepared for the November handoff; it is not proof
 of a successful production deployment. GitHub Actions is the deployment record.
 
@@ -24,8 +25,9 @@ one session exists elsewhere. Reuse committed assets when generation is absent.
 
 ## Current implementation
 
-- `site/` contains eight HTML pages, a shared stylesheet, local images, and one
-  small favicon-preview script. There is no build step or application backend.
+- `site/` contains nine HTML pages, a shared stylesheet plus one page stylesheet
+  (`holmes-texts.css`), local images, and one small favicon-preview script.
+  There is no build step or application backend.
 - Navigation: About, Essays, Projects, Contact. The homepage and archive contain
   local copy refinements included in this handoff: “Understanding the world,”
   “Longer reflections,” “Reporting my findings,” and the homepage “Reach out.”
@@ -45,6 +47,21 @@ Stack Overflow. Five screenshot segments are joined with explicit overlap trims;
 an expandable transcript provides accessible text. Preserve source attribution
 and CC BY-SA links. Capture instructions and originals are in
 [`design-guide/assets/editorial-captures/`](../design-guide/assets/editorial-captures/math-stackexchange-formulas-answer-33987/README.md).
+
+**The Holmes–Balwani Texts** (`site/holmes-balwani-texts.html`, linked from
+the Projects grid as 04 · Records) is a reading edition of the seven
+text-message exhibits (5387A–G) from *United States v. Holmes*, set out as
+conversations with a note on how each exhibit and exchange was used at trial.
+The court posted the exhibits as image-only scans; Claude transcribed them (a
+model reading each row, checked against OCR and re-checked where they
+disagreed) and drafted the notes from the transcripts, filings and news reports
+listed on the page. The page says so, calls itself unofficial, and links every
+conversation to its page of the court's scan. It was generated once outside this
+repository and is checked in as finished HTML: corrections are direct edits.
+It uses the essay frame (`page-essay`) with the essay art, Projects navigation,
+and its own `styles/holmes-texts.css`. The check requires the court's exhibit
+folder and the source for Balwani's denial of Holmes's abuse allegations to stay
+linked. Added at Henry's request on November 1, 2026.
 
 **Phase Shift** (`site/phase-shift.html`), subtitle *Enter the Entrepreneurial
 Age*, was ported from Henry's Google Doc with that exact title, not the separate
@@ -97,13 +114,22 @@ future reconciliation: `1eFiVAHMh_-dBPIXhNMCxwJ_QvDzMw2rQqBS7jgWpCEs`.
   (Terraform validation, two mocked Terraform tests, 13 edge-redirect tests).
   Its cached tool binaries are Linux executables and cannot run directly on
   macOS; use Linux/CI for that check. No infrastructure source changed.
+- November 1, 2026 (Claude, on Henry's Windows machine): added The
+  Holmes–Balwani Texts, its Projects card (04 · Records, a cobalt band that
+  completes the grid), its page check and a test. Reviewed at 1024 px desktop
+  and 375 px mobile in a local preview: no horizontal overflow, the exhibit list
+  stays in view beside the threads, no broken in-page links. Site check passed
+  (nine pages); 30 of 31 Python tests passed. The exception,
+  `test_all_operation_traces_have_fixed_authority`, also fails on unchanged
+  `main` under Windows, which has no POSIX file modes; CI runs on Linux.
 
 ## Next work / unresolved choices
 
 1. Incorporate the work Henry is developing with another agent on another
-   machine. Its contents have not yet been provided here. Pull this handoff,
-   compare changes against the shared design guide, and preserve existing prose
-   and source links when integrating it.
+   machine. The first piece, The Holmes–Balwani Texts, was integrated on
+   November 1, 2026. Integrate anything further the same way: pull this
+   handoff, compare against the shared design guide, and preserve existing
+   prose and source links.
 2. Choose a final favicon after Henry has experienced the rotating candidates.
    Optimize the chosen silhouette at actual tab sizes; retain its living quality.
 3. Decide whether CULTURE replaces LEARNING everywhere, and refine remaining

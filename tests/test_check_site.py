@@ -182,6 +182,25 @@ class CheckSiteTests(unittest.TestCase):
             errors,
         )
 
+    def test_texts_record_links_are_enforced(self) -> None:
+        temporary, site = self.copy_site()
+        self.addCleanup(temporary.cleanup)
+        page = site / "holmes-balwani-texts.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                "https://files.cand.uscourts.gov/files/18-CR-258%20USA%20v.%20Holmes/\"",
+                "https://example.com/missing-record\"",
+            ),
+            encoding="utf-8",
+        )
+
+        errors = validate_site(site)
+
+        self.assertTrue(
+            any("site/holmes-balwani-texts.html" in error and "exhibit folder" in error for error in errors),
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

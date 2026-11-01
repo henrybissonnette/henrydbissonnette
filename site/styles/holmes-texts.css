@@ -1,0 +1,607 @@
+/* The Holmes–Balwani texts: trial exhibits set out as conversations.
+   The page uses the long-page frame from main.css (art at the header and footer,
+   a quiet middle). Each exhibit's thread sits on the essay reading surface.
+   Holmes's messages are on the right in the Projects violet, Balwani's on the
+   left in a deeper ground, anyone else's in a turquoise tint. */
+
+.page-texts {
+  --texts-balwani: #efcaa9;
+  --texts-other: color-mix(in srgb, var(--turquoise) 18%, var(--ground-light));
+  --texts-surface: color-mix(in srgb, var(--ground-light) 94%, transparent);
+}
+
+/* overflow: clip (unlike hidden) clips the art without becoming a scroll
+   container, so the binder can stay in view while the page scrolls. */
+html:has(body.page-texts),
+body.page-texts {
+  overflow-x: clip;
+}
+
+body.page-texts main {
+  overflow: clip;
+}
+
+.texts-intro {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 1fr);
+}
+
+.texts-intro h1 {
+  font-size: clamp(3.2rem, 7vw, 6.2rem);
+}
+
+.texts-intro > div:last-child {
+  max-width: 31rem;
+}
+
+.texts-intro .eyebrow a {
+  color: inherit;
+}
+
+.texts-stats,
+.texts-case {
+  max-width: 41rem;
+  font-family: var(--font-ui);
+}
+
+.texts-stats {
+  margin: 1.4rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.texts-case {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.texts-layout {
+  display: grid;
+  grid-template-columns: 17.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  padding-top: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+/* The binder: who is texting and terms, then the exhibits, which stay in view
+   beside the long threads. The aside spans the layout's height so they can. */
+
+.texts-aside {
+  align-self: stretch;
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.aside-block {
+  padding: 1.1rem 1.1rem 1.2rem;
+  border-top: 2px solid var(--ink);
+  background: color-mix(in srgb, var(--ground-light) 90%, transparent);
+}
+
+.aside-block + .aside-block {
+  margin-top: 1.25rem;
+}
+
+.texts-contents {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: color-mix(in srgb, var(--violet) 45%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.aside-block h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.aside-block p {
+  margin: 0 0 0.65rem;
+}
+
+.texts-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  vertical-align: 0.05em;
+}
+
+.texts-dot.h {
+  border-color: var(--violet);
+  background: var(--violet);
+}
+
+.texts-dot.b {
+  background: var(--texts-balwani);
+}
+
+.texts-dot.o {
+  border-color: var(--turquoise);
+  background: var(--texts-other);
+}
+
+.exhibit-list,
+.conv-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exhibit-list > li {
+  border-bottom: 1px solid var(--rule);
+}
+
+.ex-link,
+.conv-list a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 2.75rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.ex-link {
+  padding-block: 0.45rem 0.1rem;
+}
+
+.ex-id,
+.conv-list .d {
+  color: #8f1f17;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ex-title {
+  font-family: var(--font-editorial);
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.ex-link:hover .ex-title,
+.conv-list a:hover {
+  color: #8f1f17;
+}
+
+.exhibit-list summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  list-style: none;
+}
+
+.exhibit-list summary::before {
+  margin-right: 0.45rem;
+  color: var(--violet);
+  content: "+";
+  font-weight: 800;
+}
+
+.exhibit-list details[open] summary::before {
+  content: "−";
+}
+
+.exhibit-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.conv-list {
+  margin-bottom: 0.6rem;
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--violet);
+}
+
+.conv-list a {
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.hint {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.texts-aside dl {
+  margin: 0;
+}
+
+.texts-aside dt {
+  font-weight: 750;
+}
+
+.texts-aside dd {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+}
+
+/* The exhibits. */
+
+.exhibit {
+  scroll-margin-top: 1rem;
+}
+
+.exhibit + .exhibit {
+  margin-top: clamp(4rem, 9vw, 7rem);
+}
+
+.exhibit-head {
+  max-width: 48rem;
+}
+
+.exhibit-head h2 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 500;
+}
+
+.exhibit-head p {
+  margin: 0 0 1rem;
+}
+
+.exhibit-head .shown,
+.exhibit-head .meta {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.exhibit-head .shown {
+  color: var(--muted);
+}
+
+.exhibit-head .meta {
+  margin-bottom: 0;
+}
+
+.thread {
+  width: min(100%, 48rem);
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  padding: clamp(1.25rem, 4vw, 3rem);
+  border: 1px solid var(--rule);
+  background: var(--texts-surface);
+  box-shadow: clamp(0.55rem, 2vw, 1.4rem) clamp(0.55rem, 2vw, 1.4rem) 0 rgba(112, 38, 184, 0.13);
+}
+
+.thread > * + * {
+  margin-top: clamp(2.5rem, 6vw, 3.5rem);
+}
+
+.conv {
+  scroll-margin-top: 1rem;
+}
+
+.conv-note {
+  margin-bottom: 1rem;
+  padding-left: clamp(0.9rem, 2.5vw, 1.25rem);
+  border-left: 0.38rem solid var(--violet);
+}
+
+.conv:target .conv-note {
+  border-left-color: var(--coral);
+}
+
+.conv-note p {
+  margin: 0 0 0.55rem;
+}
+
+.conv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.texts-tag {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 100vmax;
+  color: #8f1f17;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-stretch: condensed;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.conv-note h3 {
+  margin: 0.15rem 0 0.6rem;
+  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.conv-note .use {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.conv-note .topic {
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.conv-note .people,
+.conv-note .src {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+}
+
+.conv-note .people {
+  margin: 0 0 0.55rem;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
+
+.conv-note .people b {
+  color: var(--ink);
+}
+
+.conv-note .src {
+  margin: 0;
+  color: var(--muted);
+}
+
+.repeat {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--rule);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.84rem;
+}
+
+/* Messages. */
+
+.thread .day {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.thread .day::before,
+.thread .day::after {
+  flex: 1;
+  border-top: 1px solid var(--rule);
+  content: "";
+}
+
+.gap,
+.sys {
+  margin: 0.9rem 0;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.msg {
+  display: grid;
+  justify-items: start;
+  margin-top: 0.15rem;
+  font-family: var(--font-ui);
+}
+
+.msg.h {
+  justify-items: end;
+}
+
+.msg .name {
+  margin: 0.75rem 0.85rem 0.15rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.bubble {
+  max-width: min(82%, 32rem);
+  padding: 0.5rem 0.85rem;
+  border-radius: 1.2rem;
+  font-size: 0.97rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.msg.h .bubble {
+  border-bottom-right-radius: 0.35rem;
+  background: var(--violet);
+  color: #fff8ef;
+}
+
+.msg.b .bubble,
+.msg.o .bubble {
+  border-bottom-left-radius: 0.35rem;
+  color: var(--ink);
+}
+
+.msg.b .bubble {
+  background: var(--texts-balwani);
+}
+
+.msg.o .bubble {
+  background: var(--texts-other);
+}
+
+.bubble i {
+  opacity: 0.75;
+}
+
+.redact {
+  display: inline-block;
+  min-width: 5em;
+  height: 1em;
+  border-radius: 2px;
+  background: #000;
+  vertical-align: -0.15em;
+}
+
+.msg.h .redact {
+  box-shadow: 0 0 0 1px rgba(255, 248, 239, 0.6);
+}
+
+.flag {
+  margin: 0.15rem 0.85rem 0;
+  color: #8f1f17;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.time {
+  max-width: 28rem;
+  margin: 0 0.85rem 0.1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.msg.h .time {
+  text-align: right;
+}
+
+.time summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  list-style: none;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
+.time summary::-webkit-details-marker {
+  display: none;
+}
+
+.time summary:focus-visible,
+.exhibit-list summary:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--ground-light);
+}
+
+.time p {
+  margin: 0 0 0.25rem;
+}
+
+/* About this edition: a solid surface, since the footer art rises behind it. */
+
+.texts-about {
+  width: min(100%, 48rem);
+  margin-top: clamp(4.5rem, 10vw, 7.5rem);
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border-left: 6px solid var(--violet);
+  background: var(--ground-light);
+}
+
+.texts-about h2 {
+  margin: 0 0 1.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+}
+
+.texts-about h3 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.texts-about p {
+  margin: 0 0 1rem;
+}
+
+.sources {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
+}
+
+.sources li {
+  margin: 0.15rem 0;
+}
+
+.sources a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+@media (max-width: 62rem) {
+  .texts-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .texts-contents {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 48rem) {
+  .texts-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .thread {
+    box-shadow: 0.65rem 0.65rem 0 rgba(112, 38, 184, 0.13);
+  }
+}
+
+@media (max-width: 34rem) {
+  .thread {
+    margin-inline: calc(-0.5 * var(--page-gutter));
+    width: auto;
+    padding: 1rem 0.85rem 1.25rem;
+  }
+
+  .bubble {
+    max-width: 88%;
+  }
+}
+
+@media (forced-colors: active) {
+  .msg .bubble {
+    border: 1px solid CanvasText;
+  }
+
+  .texts-dot {
+    border-color: CanvasText;
+    background: CanvasText;
+  }
+}
